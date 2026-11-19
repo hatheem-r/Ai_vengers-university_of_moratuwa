@@ -1,0 +1,10 @@
+langgraph
+langchain
+langchain-anthropic
+pandas
+openpyxl
+pdfplumber
+ortools
+pydantic
+python-dotenv
+streamlit
