@@ -6,8 +6,8 @@ Every field follows docs/API.md §5 (WorkOrderPlan) and §6 (TraceEvent) and the
 runner interface in TASKS.md §0.2. Hatheem: replace or merge freely; if a field
 changes, update API.md in the same PR.
 
-Not here yet: extraction schemas (Intake output) and tool input/output models.
-Tool models are added with each tool.
+Not here yet: extraction schemas (Intake output). Tool input/output models are
+added with each tool (section "Tool contracts" at the end).
 """
 
 from __future__ import annotations
@@ -233,3 +233,119 @@ def system_id_for(config: RunConfig) -> SystemId:
     if config.mode == "baseline":
         return "B"
     return "M-S" if config.model_profile == "sonnet" else "M-mix"
+
+
+# ---------------------------------------------------------------------------
+# Tool contracts: mrp_tool (Shazan)
+# ---------------------------------------------------------------------------
+# Inputs are what an agent extracts from the bundle. Outputs reuse the plan's own
+# MaterialRequirement / Shortage / SuggestedPO models so they can be copied into
+# the WorkOrderPlan unchanged.
+
+
+class MrpWorkOrder(_Model):
+    wo_id: str
+    item_code: str
+    qty: float = Field(gt=0)
+    uom: str | None = None
+    bom_version: str | None = Field(default=None, description="BOM version to use; required if the item has several")
+    need_by: date | None = Field(default=None, description="Date the materials must be on hand (default: planning_start)")
+
+
+class BomLine(_Model):
+    parent_item: str
+    component_item: str
+    qty_per: float = Field(gt=0, description="Component quantity per 1 unit of the parent, before wastage")
+    uom: str = Field(description="Unit of qty_per")
+    wastage_pct: float = Field(default=0, ge=0, lt=100)
+    bom_version: str | None = None
+
+
+class StockRecord(_Model):
+    item_code: str
+    on_hand_qty: float
+    uom: str
+    reserved_qty: float = Field(default=0, ge=0)
+    quality_hold_qty: float = Field(default=0, ge=0, description="On hand but blocked (QC hold, rejected)")
+
+
+class OpenPO(_Model):
+    po_number: str
+    item_code: str
+    open_qty: float = Field(ge=0, description="Quantity ordered and not yet received")
+    uom: str
+    expected_date: date
+    supplier_id: str | None = None
+
+
+class SupplierOption(_Model):
+    item_code: str
+    supplier_id: str
+    lead_time_days: int = Field(ge=0, description="Calendar days from ordering to arrival")
+    moq: float = Field(default=0, ge=0, description="Minimum order quantity")
+    pack_size: float | None = Field(default=None, gt=0, description="Order in multiples of this")
+    unit_price: float | None = Field(default=None, ge=0)
+
+
+class UomConversion(_Model):
+    from_uom: str
+    to_uom: str
+    factor: float = Field(gt=0, description="1 from_uom = factor to_uom")
+    item_code: str | None = Field(default=None, description="Only for this item (e.g. fabric kg <-> m)")
+
+
+class MrpInput(_Model):
+    planning_start: date
+    work_orders: list[MrpWorkOrder] = Field(min_length=1)
+    bom: list[BomLine]
+    stock: list[StockRecord] = Field(default_factory=list)
+    open_pos: list[OpenPO] = Field(default_factory=list)
+    suppliers: list[SupplierOption] = Field(default_factory=list)
+    uom_conversions: list[UomConversion] = Field(default_factory=list)
+    safety_stock: dict[str, float] = Field(default_factory=dict, description="item_code -> quantity kept back")
+
+
+class MrpItemDetail(_Model):
+    item_code: str
+    uom: str
+    level: int = Field(description="BOM level: 1 = direct component of a work order item")
+    make_or_buy: Literal["make", "buy"]
+    gross_required_qty: float
+    wastage_qty: float
+    on_hand_qty: float
+    reserved_qty: float
+    quality_hold_qty: float
+    safety_stock_qty: float
+    available_now_qty: float
+    on_order_by_need_qty: float
+    on_order_late_qty: float
+    open_pos_used: list[str]
+    shortfall_qty: float = Field(description="Quantity not available by its need date")
+    uncovered_qty: float = Field(description="Quantity no existing stock or open PO ever covers")
+    earliest_need_by: date
+    covered_by_date: date | None = Field(description="When all demand is covered by stock and open POs; null if never")
+
+
+class WoMaterialStatus(_Model):
+    wo_id: str
+    need_by: date
+    material_ready_date: date | None = Field(description="When every material is available; null if a new PO is needed")
+    short_items: list[str]
+
+
+class PlannedProduction(_Model):
+    item_code: str
+    qty: float
+    uom: str
+    need_by: date
+    for_work_orders: list[str]
+
+
+class MrpResult(_Model):
+    material_requirements: list[MaterialRequirement]
+    shortages: list[Shortage]
+    suggested_pos: list[SuggestedPO]
+    planned_production: list[PlannedProduction]
+    work_orders: list[WoMaterialStatus]
+    details: list[MrpItemDetail]
+    issues: list[str]

@@ -34,6 +34,8 @@ from typing import Any, Literal
 from langchain_core.tools import StructuredTool, ToolException
 from pydantic import BaseModel, Field
 
+from project.tools.common import validation_error_message
+
 SUPPORTED_TYPES: dict[str, str] = {
     ".pdf": "pdf",
     ".xlsx": "xlsx",
@@ -443,6 +445,7 @@ def make_read_document_tool(bundle_dir: Path | str) -> StructuredTool:
         args_schema=ReadDocumentInput,
         response_format="content",
         handle_tool_error=True,
+        handle_validation_error=validation_error_message,
     )
 
 
