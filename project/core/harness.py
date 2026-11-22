@@ -128,6 +128,21 @@ def _ai_message(response: Any) -> AIMessage | None:
     return None
 
 
+def _content_text(content: Any) -> str:
+    """Tool result content as text for the trace; images become a short placeholder."""
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content if isinstance(content, list) else [content]:
+        if isinstance(block, dict) and block.get("type") == "text":
+            parts.append(block.get("text", ""))
+        elif isinstance(block, dict) and block.get("type") == "image":
+            parts.append(f"[image {block.get('mime_type', '')}]")
+        else:
+            parts.append(str(block))
+    return "\n".join(parts)
+
+
 def is_transient_error(exc: BaseException) -> bool:
     """True for errors worth retrying: rate limits, overload, 5xx, timeouts, network."""
     try:
@@ -204,7 +219,7 @@ class TracingMiddleware(AgentMiddleware):
         result = handler(request)
         latency_ms = int((time.perf_counter() - t0) * 1000)
         content = result.content if isinstance(result, ToolMessage) else str(result)
-        text = content if isinstance(content, str) else str(content)
+        text = _content_text(content)
         is_error = isinstance(result, ToolMessage) and result.status == "error"
         short = text.replace("\n", " ")[:TOOL_RESULT_SUMMARY_CHARS]
         self.tracer.emit(
