@@ -8,3 +8,4 @@ ortools
 pydantic
 python-dotenv
 streamlit
+pytest
