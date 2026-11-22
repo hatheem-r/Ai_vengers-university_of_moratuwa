@@ -12,7 +12,9 @@ from core.schemas import (CapacityLine, CheckerReview, CustomerPOLine, DowntimeW
                           RuleCheckInput, RuleCheckOutput, WorkOrderPlan)
 
 from .context import get_ctx
-from .llm import call_llm, chat_model, parse_json_reply, spec_for
+from core.harness import SchemaRepairFailed, call_json
+
+from .llm import chat_model, parse_json_reply, spec_for
 from .prompts import load_prompt
 from .tools import run_tool
 
@@ -111,14 +113,15 @@ def _llm_review(ctx, llm, model_id: str, state: dict, plan: WorkOrderPlan, rc: R
     if state.get("human_notes"):
         body += ["## Human planner notes (binding)", "\n".join(f"- {n}" for n in state["human_notes"])]
     messages = [SystemMessage(load_prompt("checker")), HumanMessage("\n\n".join(body))]
-    for attempt in range(2):
-        reply = call_llm(ctx, "checker", llm, model_id, messages, purpose="review" if attempt == 0 else "schema repair")
-        try:
-            parsed = CheckerReply.model_validate(parse_json_reply(reply))
-            if parsed.verdict.strip().lower() in ("pass", "revise"):
-                return parsed
-            err = f"verdict must be 'pass' or 'revise', got {parsed.verdict!r}"
-        except (ValueError, ValidationError) as exc:
-            err = str(exc)[:1000]
-        messages += [reply, HumanMessage(f"Invalid reply: {err}. Reply with the JSON object only.")]
-    return None
+
+    def parse(reply) -> CheckerReply:
+        parsed = CheckerReply.model_validate(parse_json_reply(reply))
+        if parsed.verdict.strip().lower() not in ("pass", "revise"):
+            raise ValueError(f"verdict must be 'pass' or 'revise', got {parsed.verdict!r}")
+        return parsed
+
+    try:
+        return call_json(ctx, "checker", llm, model_id, messages, parse, purpose="review", repairs=1,
+                         repair_hint="Reply with the JSON object only.")
+    except SchemaRepairFailed:
+        return None

@@ -18,15 +18,18 @@ from core.schemas import (FACTORY_TZ, Flag, MrpToolOutput, ScheduleToolOutput, V
                           WorkOrderPlan)
 
 from .context import get_ctx
-from .llm import call_llm, chat_model, parse_json_reply, spec_for
+from core.harness import HarnessError, SchemaRepairFailed, run_tool_loop
+
+from .llm import chat_model, parse_json_reply, spec_for
 from .prompts import load_prompt
 from .tools import anthropic_tool_defs, dump, run_tool
 
 PLANNER_TOOLS = ["mrp_tool", "schedule_tool"]
 MAX_PLANNER_TURNS = 8
+MAX_PLANNER_REPAIRS = 2   # a final answer can fail assembly (e.g. a WO missing from the schedule)
 
 
-class PlannerError(RuntimeError):
+class PlannerError(HarnessError):
     pass
 
 
@@ -124,23 +127,21 @@ def planner(state: dict) -> dict:
     tools = anthropic_tool_defs(PLANNER_TOOLS)
     tool_outputs: dict[str, Any] = dict(state.get("tool_outputs") or {})
     messages: list[BaseMessage] = [SystemMessage(load_prompt("planner")), HumanMessage(_context_message(state))]
-    plan: Optional[WorkOrderPlan] = None
-    for _ in range(MAX_PLANNER_TURNS):
-        reply = call_llm(ctx, "planner", llm, model_id, messages, tools=tools, purpose=f"plan v{version}")
-        messages.append(reply)
-        if reply.tool_calls:
-            for tc in reply.tool_calls:
-                messages.append(_run_tool_call(ctx, tc, tool_outputs))
-            continue
-        try:
-            draft = PlannerDraft.model_validate(parse_json_reply(reply))
-            plan = assemble_plan(draft, tool_outputs, bundle_id=state["bundle_id"], system_id=ctx.config.system_id)
-            break
-        except (ValueError, ValidationError) as exc:  # PlanAssemblyError is a ValueError
-            messages.append(HumanMessage(f"Your final answer could not be used: {str(exc)[:2000]}\n"
-                                         "Fix it (call the tools again if needed) and reply with the corrected draft JSON."))
-    if plan is None:
-        raise PlannerError(f"Planner gave no valid plan in {MAX_PLANNER_TURNS} turns")
+
+    def finish(reply) -> WorkOrderPlan:  # ValueError / ValidationError -> sent back for repair
+        draft = PlannerDraft.model_validate(parse_json_reply(reply))
+        return assemble_plan(draft, tool_outputs, bundle_id=state["bundle_id"], system_id=ctx.config.system_id)
+
+    try:
+        plan: WorkOrderPlan = run_tool_loop(
+            ctx, "planner", llm, model_id, messages, tools=tools,
+            execute=lambda tc: _run_tool_call(ctx, tc, tool_outputs), finish=finish,
+            max_turns=MAX_PLANNER_TURNS, max_repairs=MAX_PLANNER_REPAIRS, purpose=f"plan v{version}",
+            repair_hint="Fix it (call the tools again if needed) and reply with the corrected draft JSON.").value
+    except HarnessError as exc:
+        if isinstance(exc, SchemaRepairFailed):
+            raise
+        raise PlannerError(str(exc)) from exc
 
     summary = (f"plan v{version}: {len(plan.work_orders)} WO, {len(plan.shortages)} shortage(s), "
                f"{len(plan.flags)} flag(s), {sum(w.is_late for w in plan.work_orders)} late")
