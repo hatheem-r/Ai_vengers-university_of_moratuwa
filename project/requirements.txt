@@ -7,4 +7,8 @@ pdfplumber
 ortools
 pydantic
 python-dotenv
-streamlit
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+pytest

@@ -19,6 +19,13 @@ venv/
 .vscode/
 .idea/
 
-# Run outputs
+# Run outputs (never commit per TASKS.md)
+runs/
 logs/
 traces/
+
+# Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
