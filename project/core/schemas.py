@@ -12,7 +12,7 @@ added with each tool (section "Tool contracts" at the end).
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -349,3 +349,102 @@ class MrpResult(_Model):
     work_orders: list[WoMaterialStatus]
     details: list[MrpItemDetail]
     issues: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Tool contracts: schedule_tool (Shazan)
+# ---------------------------------------------------------------------------
+# Naive datetimes are read as Sri Lanka time (+05:30).
+
+
+class CalendarSpec(_Model):
+    work_days: list[int] = Field(default_factory=lambda: [0, 1, 2, 3, 4], description="Working weekdays, Monday = 0")
+    shift_start: time = time(8, 0)
+    shift_end: time = time(17, 0)
+    overtime_end: time | None = Field(default=None, description="Latest end of a day with overtime (used only if allow_overtime)")
+    holidays: list[date] = Field(default_factory=list)
+
+
+class MachineSpec(_Model):
+    machine_id: str
+    operations: list[str] = Field(default_factory=list, description="Operations this machine can do")
+    rate_per_hour: float | None = Field(default=None, gt=0, description="Units per hour, for any operation")
+    rates: dict[str, float] = Field(default_factory=dict, description="operation -> units per hour (overrides rate_per_hour)")
+    setup_minutes: float = Field(default=0, ge=0)
+    available: bool = True
+
+
+class DowntimeWindow(_Model):
+    machine_id: str
+    start: datetime
+    end: datetime
+    reason: str = "maintenance"
+
+
+class RoutingStep(_Model):
+    seq: int
+    operation: str
+    machine_ids: list[str] = Field(default_factory=list, description="Allowed machines; empty = any machine that lists this operation")
+    hours: float | None = Field(default=None, gt=0, description="Fixed run time for the whole quantity (overrides rates)")
+    rate_per_hour: float | None = Field(default=None, gt=0, description="Units per hour (overrides machine rates)")
+    setup_minutes: float | None = Field(default=None, ge=0, description="Overrides the machine's setup time")
+
+
+class ScheduleWorkOrder(_Model):
+    wo_id: str
+    item_code: str
+    qty: float = Field(gt=0)
+    due_date: date
+    priority: int = Field(default=1, ge=1, description="1 = highest")
+    earliest_start: date | datetime | None = Field(default=None, description="E.g. the material-ready date from mrp_tool")
+    routing: list[RoutingStep] = Field(min_length=1)
+
+
+class ScheduleInput(_Model):
+    planning_start: date
+    work_orders: list[ScheduleWorkOrder] = Field(min_length=1)
+    machines: list[MachineSpec] = Field(min_length=1)
+    downtime: list[DowntimeWindow] = Field(default_factory=list)
+    calendar: CalendarSpec = Field(default_factory=CalendarSpec)
+    allow_overtime: bool = False
+    horizon_days: int = Field(default=90, ge=1, le=366)
+    time_limit_s: float = Field(default=10.0, gt=0, le=10.0)
+
+
+class ScheduledWorkOrder(_Model):
+    wo_id: str
+    item_code: str
+    qty: float
+    priority: int
+    due_date: date
+    planned_start: datetime
+    planned_finish: datetime
+    is_late: bool
+    days_late: int
+    operations: list[Operation]
+
+
+class ScheduleConflict(_Model):
+    type: Literal["due_date_risk", "capacity_overload", "machine_down", "missing_field"]
+    wo_id: str | None = None
+    machine_id: str | None = None
+    message: str
+
+
+class MachineLoad(_Model):
+    machine_id: str
+    busy_hours: float
+    available_hours: float
+    downtime_hours: float
+    utilization_pct: float
+
+
+class ScheduleResult(_Model):
+    status: Literal["optimal", "feasible", "infeasible"]
+    work_orders: list[ScheduledWorkOrder]
+    conflicts: list[ScheduleConflict]
+    machine_load: list[MachineLoad]
+    infeasible_reasons: list[str]
+    violations: list[str] = Field(description="Independent re-check of the schedule; always empty unless there is a bug")
+    issues: list[str]
+    solver: dict[str, Any]
