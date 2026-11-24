@@ -1,0 +1,129 @@
+{
+  "bundle_id": "A_S9_typical",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S9",
+  "scenario_name": "Compliance breach (overtime)",
+  "mess_level": "typical",
+  "seed": 1007,
+  "n_documents": 11,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6027,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 8370,
+      "pages": null
+    },
+    {
+      "name": "customer_po_NWO-PO-4953.pdf",
+      "type": "pdf",
+      "size_bytes": 3195,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-11-28.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6617,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5416,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6198,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00433.pdf",
+      "type": "pdf",
+      "size_bytes": 2755,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6397,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_TI-26-4486.pdf",
+      "type": "pdf",
+      "size_bytes": 2979,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "dmy_dates",
+    "names_not_codes",
+    "mixed_currency",
+    "notes_column"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "names_not_codes",
+      "document": "bom_techpack.xlsx",
+      "detail": "item code column removed from tech pack BoM"
+    },
+    {
+      "defect": "names_not_codes",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "item code column removed; only names shown"
+    },
+    {
+      "defect": "notes_column",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "free-text Remarks column"
+    },
+    {
+      "defect": "notes_column",
+      "document": "hourly_production_report_2026-11-28.xlsx",
+      "detail": "free-text Remarks column"
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_TI-26-4486.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "ot_proposal",
+      "wc": "LINE-2"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-11-30"
+}

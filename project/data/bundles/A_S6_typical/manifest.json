@@ -1,0 +1,126 @@
+{
+  "bundle_id": "A_S6_typical",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S6",
+  "scenario_name": "Conflicting documents",
+  "mess_level": "typical",
+  "seed": 1004,
+  "n_documents": 12,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6084,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7258,
+      "pages": null
+    },
+    {
+      "name": "customer_po_KSW-26-1102.pdf",
+      "type": "pdf",
+      "size_bytes": 3145,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6625,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5433,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5907,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00696.pdf",
+      "type": "pdf",
+      "size_bytes": 2749,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "sales_order_confirmation_KSW-26-1102.pdf",
+      "type": "pdf",
+      "size_bytes": 2617,
+      "pages": 1
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6724,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-1511.pdf",
+      "type": "pdf",
+      "size_bytes": 2934,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "blank_noncritical",
+    "notes_column"
+  ],
+  "defects_applied": [
+    {
+      "defect": "notes_column",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "free-text Remarks column"
+    },
+    {
+      "defect": "blank_noncritical",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "row": 2,
+        "column": "Location"
+      }
+    },
+    {
+      "defect": "notes_column",
+      "document": "hourly_production_report_2026-12-05.xlsx",
+      "detail": "free-text Remarks column"
+    }
+  ],
+  "planted_conflicts": [
+    {
+      "kind": "qty_mismatch",
+      "po_no": "KSW/26/1102",
+      "item": "LEG-LDS-BLK",
+      "customer_po_qty": 1680,
+      "confirmation_qty": 1320,
+      "truth": "customer_po",
+      "expected_resolution": "Plan the customer PO quantity, flag for sales to confirm with the buyer."
+    }
+  ],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

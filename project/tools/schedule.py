@@ -1,534 +1,460 @@
-"""schedule_tool: production scheduling with OR-Tools CP-SAT.
+"""schedule_tool: finite-capacity scheduling with OR-Tools CP-SAT.
 
-Model:
+    from tools.schedule import schedule_tool
+    out = schedule_tool(ScheduleToolInput(...))   # -> ScheduleToolOutput (core/schemas.py)
 
-* **Working-time axis.** The calendar (work days, shift hours, holidays, and
-  overtime hours when ``allow_overtime``) is turned into one axis of working
-  minutes. Nights, weekends and holidays are not on it, so a long operation
-  can pause overnight (e.g. sewing from Monday 08:00 to next Tuesday 17:00).
-* **Machines.** Each operation runs on exactly one eligible machine (the solver
-  chooses when several can do it). A machine runs one operation at a time.
-* **Downtime.** An operation never overlaps a downtime window on its machine,
-  not even one that falls entirely outside working hours: its start and end
-  must both be on the same side of the window. So a check that looks only at
-  start/end times never sees work during downtime.
-* **Order.** Operations of a work order run in ``seq`` order, each starting
-  after the previous one ends; the first starts no earlier than
-  ``earliest_start`` (pass the material-ready date from mrp_tool).
-* **Objective.** Minimise priority-weighted lateness against due dates
-  (priority 1 weighs most), then the sum of finish times.
-* **Limit.** CP-SAT stops after ``time_limit_s`` (max 10 s). A plan found but
-  not proven best is returned with ``status="feasible"``.
+Model
+-----
+- Time runs on working days only (rest days and holidays from `calendar` are skipped).
+  Every working day is a slot of L minutes starting at `calendar.shift_start`, where L is
+  the longest day any work centre can work (regular + overtime). Work centre w can work
+  minutes [0, c_w) of each day: c_w = regular_min_per_day, plus ot_max_min_per_day when
+  the solver turns overtime on for w (overtime is a yes/no decision per work centre for
+  the whole horizon, as in the reference solver).
+- A work centre is one resource: the `units` parallel machines/operators are folded into
+  the duration, duration = setup + qty x std_min_per_unit / (units x efficiency), rounded
+  to whole minutes. Two operations never overlap on a work centre (NoOverlap).
+- An operation runs without a break except overnight: it may start late on one day and
+  continue the next working day. It may not run through downtime: it finishes before the
+  machine goes down or starts after it is back.
+- An operation can run on its work centre or on one of that centre's `alternates`
+  (with the alternate's units and efficiency).
+- Operations of a job run in `seq` order; the first starts no earlier than the job's
+  `earliest_start` (material ready) and planning_start.
+- Downtime: each DowntimeWindow blocks its work centre for whole days. A work centre whose
+  capacity-plan status starts with "DOWN" and that has no window is down for the whole
+  horizon. WIP load runs first on its work centre (from the first free minute; it speeds
+  up if that centre goes on overtime), and new jobs on that centre start after it.
+- Objective (`min_lateness`): working days late (summed over jobs) first, then the number
+  of work centres on overtime, then the sum of finish times. `min_makespan` puts the last
+  finish time first.
 
-Before returning, every schedule is re-checked in calendar time by
-:func:`check_schedule` (double-booking, downtime, working hours, order, earliest
-start). Any finding goes to ``violations``; it is empty unless there is a bug.
+Output
+------
+status: "optimal" / "feasible" (CP-SAT result); "timeout" when CP-SAT found nothing
+within the limit, in which case `scheduled` holds the greedy schedule that is also used as
+the solver's starting hint (it is feasible, just not optimised); "infeasible" when some
+job cannot be scheduled at all (unknown work centre, no operations, every option down),
+with `infeasibility_reason` saying which and why; the other jobs are still scheduled.
+
+Never double-books a work centre and never schedules into downtime: both are hard
+constraints, and tests/test_tools.py checks every schedule with rule_check.
+Days late = working days after the due date up to the finish date.
 """
-
 from __future__ import annotations
 
-import bisect
 import math
 import time as _time
-from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
-from typing import Any
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from typing import Optional
 
-from langchain_core.tools import StructuredTool, ToolException
+from core.schemas import (FACTORY_TZ, CapacityLine, Operation, ScheduleConflict, ScheduledWorkOrder, ScheduleJob,
+                          ScheduleToolInput, ScheduleToolOutput)
 
-from project.core.schemas import (
-    DowntimeWindow,
-    MachineLoad,
-    MachineSpec,
-    Operation,
-    RoutingStep,
-    ScheduleConflict,
-    ScheduledWorkOrder,
-    ScheduleInput,
-    ScheduleResult,
-    ScheduleWorkOrder,
-)
-from project.core.tracing import SL_TZ
-from project.tools.common import validation_error_message
+from .workcal import first_working_day, working_days_after, working_days_list
 
+MAX_HORIZON_DAYS = 1500
+OBJ_LATE = 1_000_000_000      # per working day late
+OBJ_OT = 10_000_000           # per work centre on overtime
 NUM_WORKERS = 8
-# CP-SAT can overrun its limit a little (and model building takes time), so the solver
-# gets the time left minus this margin; the whole tool call stays within time_limit_s.
-SOLVER_MARGIN_S = 1.0
-RANDOM_SEED = 0
-
-
-def _aware(dt: datetime) -> datetime:
-    return dt.replace(tzinfo=SL_TZ) if dt.tzinfo is None else dt.astimezone(SL_TZ)
-
-
-def _key(s: str) -> str:
-    return s.strip().casefold()
-
-
-# ---------------------------------------------------------------------------
-# Calendar <-> working minutes
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class _Segment:
-    start: datetime
-    regular_end: datetime  # end of the normal shift
-    end: datetime  # end including overtime (== regular_end without overtime)
-
-    @property
-    def minutes(self) -> int:
-        return int((self.end - self.start).total_seconds() // 60)
-
-    @property
-    def regular_minutes(self) -> int:
-        return int((self.regular_end - self.start).total_seconds() // 60)
-
-
-class WorkCalendar:
-    """Maps calendar datetimes to minutes of working time since the planning start, and back."""
-
-    def __init__(self, inp: ScheduleInput):
-        cal = inp.calendar
-        holidays = set(cal.holidays)
-        use_ot = inp.allow_overtime and cal.overtime_end is not None and cal.overtime_end > cal.shift_end
-        self.segments: list[_Segment] = []
-        for i in range(inp.horizon_days):
-            day = inp.planning_start + timedelta(days=i)
-            if day.weekday() not in cal.work_days or day in holidays:
-                continue
-            start = datetime.combine(day, cal.shift_start, SL_TZ)
-            regular_end = datetime.combine(day, cal.shift_end, SL_TZ)
-            end = datetime.combine(day, cal.overtime_end, SL_TZ) if use_ot else regular_end
-            if end > start:
-                self.segments.append(_Segment(start, min(regular_end, end), end))
-        self.offsets: list[int] = []
-        total = 0
-        for seg in self.segments:
-            self.offsets.append(total)
-            total += seg.minutes
-        self.total = total
-        self._starts = [s.start for s in self.segments]
-        self.work_days = set(cal.work_days)
-        self.holidays = holidays
-
-    def minutes_before(self, dt: datetime) -> float:
-        """Working minutes between the planning start and ``dt``."""
-        dt = _aware(dt)
-        i = bisect.bisect_right(self._starts, dt) - 1
-        if i < 0:
-            return 0.0
-        seg = self.segments[i]
-        if dt >= seg.end:
-            return float(self.offsets[i] + seg.minutes)
-        return self.offsets[i] + (dt - seg.start).total_seconds() / 60
-
-    def start_at(self, t: int) -> datetime:
-        """Calendar time to START work at working minute ``t`` (a boundary means the next shift)."""
-        i = bisect.bisect_right(self.offsets, t) - 1
-        i = max(0, min(i, len(self.segments) - 1))
-        seg = self.segments[i]
-        return seg.start + timedelta(minutes=min(t - self.offsets[i], seg.minutes))
-
-    def end_at(self, t: int) -> datetime:
-        """Calendar time work ENDS at working minute ``t`` (a boundary means the end of the earlier shift)."""
-        i = bisect.bisect_left(self.offsets, t) - 1
-        i = max(0, min(i, len(self.segments) - 1))
-        seg = self.segments[i]
-        return seg.start + timedelta(minutes=max(0, min(t - self.offsets[i], seg.minutes)))
-
-    def overtime_minutes(self, a: int, b: int) -> int:
-        """Working minutes in [a, b) that fall in overtime hours."""
-        total = 0
-        for off, seg in zip(self.offsets, self.segments):
-            if off >= b:
-                break
-            ot_a, ot_b = off + seg.regular_minutes, off + seg.minutes
-            total += max(0, min(b, ot_b) - max(a, ot_a))
-        return total
-
-    def is_working_day(self, d: date) -> bool:
-        return d.weekday() in self.work_days and d not in self.holidays
-
-    def working_days_between(self, after: date, until: date) -> int:
-        """Working days d with after < d <= until."""
-        n, d = 0, after + timedelta(days=1)
-        while d <= until:
-            n += self.is_working_day(d)
-            d += timedelta(days=1)
-        return n
-
-    def within_hours(self, dt: datetime, *, as_end: bool) -> bool:
-        dt = _aware(dt)
-        for seg in self.segments:
-            if (seg.start < dt <= seg.end) if as_end else (seg.start <= dt < seg.end):
-                return True
-        return False
-
-
-# ---------------------------------------------------------------------------
-# Problem preparation
-# ---------------------------------------------------------------------------
 
 
 @dataclass
 class _Option:
-    machine: str
-    duration: int  # working minutes
+    wc: str
+    minutes: int
 
 
 @dataclass
-class _Task:
-    wo: ScheduleWorkOrder
-    step: RoutingStep
+class _Op:
+    job: ScheduleJob
+    seq: int
+    name: str
     options: list[_Option]
 
 
+@dataclass
+class _Placed:
+    start: int
+    end: int
+    wc: str
+
+
+@dataclass
 class _Problem:
-    def __init__(self, inp: ScheduleInput):
-        self.inp = inp
-        self.cal = WorkCalendar(inp)
-        self.issues: list[str] = []
-        self.reasons: list[str] = []
-        self.machines: dict[str, MachineSpec] = {}
-        for m in inp.machines:
-            if not m.available:
-                self.issues.append(f"Machine {m.machine_id} is marked unavailable; nothing is scheduled on it.")
-                continue
-            self.machines[_key(m.machine_id)] = m
-        self.downtime: dict[str, list[tuple[int, int, DowntimeWindow]]] = {k: [] for k in self.machines}
-        known = {_key(m.machine_id) for m in inp.machines}
-        for w in inp.downtime:
-            k = _key(w.machine_id)
-            if _aware(w.end) <= _aware(w.start):
-                self.issues.append(f"Downtime on {w.machine_id} ending {w.end} does not end after it starts; ignored.")
-            elif k not in known:
-                self.issues.append(f"Downtime for unknown machine {w.machine_id}; ignored.")
-            elif k in self.downtime:
-                a = math.floor(self.cal.minutes_before(w.start))
-                b = math.ceil(self.cal.minutes_before(w.end))
-                self.downtime[k].append((a, b, w))
-        self.max_free = {k: self._max_free(k) for k in self.machines}
-        self.tasks: dict[str, list[_Task]] = {}
-        self.earliest: dict[str, int] = {}
-        self.deadline: dict[str, int] = {}
-        if self.cal.total == 0:
-            self.reasons.append("The calendar has no working time in the horizon (check work_days, shift hours, holidays).")
-            return
-        seen: set[str] = set()
-        for wo in inp.work_orders:
-            if wo.wo_id in seen:
-                self.reasons.append(f"Work order id {wo.wo_id} appears more than once.")
-                continue
-            seen.add(wo.wo_id)
-            self._prepare(wo)
-
-    def _max_free(self, k: str) -> int:
-        """Longest stretch of working time on machine k with no downtime."""
-        best, cur = 0, 0
-        for a, b, _ in sorted(self.downtime[k], key=lambda d: (d[0], d[1])):
-            best = max(best, a - cur)
-            cur = max(cur, b)
-        return max(best, self.cal.total - cur)
-
-    def _prepare(self, wo: ScheduleWorkOrder) -> None:
-        if wo.earliest_start is None:
-            est = 0
-        elif isinstance(wo.earliest_start, datetime):
-            est = math.ceil(self.cal.minutes_before(wo.earliest_start))
-        else:
-            est = math.ceil(self.cal.minutes_before(datetime.combine(wo.earliest_start, time(0), SL_TZ)))
-        if est >= self.cal.total:
-            self.reasons.append(f"{wo.wo_id}: earliest start {wo.earliest_start} is after the {self.inp.horizon_days}-day horizon.")
-            return
-        self.earliest[wo.wo_id] = est
-        self.deadline[wo.wo_id] = math.floor(self.cal.minutes_before(datetime.combine(wo.due_date, time(23, 59, 59), SL_TZ)))
-        tasks = []
-        for step in sorted(wo.routing, key=lambda s: s.seq):
-            options, why = self._options(wo, step)
-            if not options:
-                self.reasons.append(f"{wo.wo_id} seq {step.seq} ({step.operation}): {why}")
-            tasks.append(_Task(wo, step, options))
-        self.tasks[wo.wo_id] = tasks
-
-    def _options(self, wo: ScheduleWorkOrder, step: RoutingStep) -> tuple[list[_Option], str]:
-        if step.machine_ids:
-            ids = [_key(m) for m in step.machine_ids]
-            missing = [m for m in step.machine_ids if _key(m) not in self.machines]
-            if missing:
-                self.issues.append(f"{wo.wo_id} seq {step.seq}: machine(s) {', '.join(missing)} unknown or unavailable.")
-            eligible = [self.machines[i] for i in ids if i in self.machines]
-        else:
-            eligible = [m for m in self.machines.values() if _key(step.operation) in {_key(o) for o in m.operations}]
-        if not eligible:
-            return [], f"no available machine can do '{step.operation}'."
-        options, too_long, no_rate = [], [], []
-        for m in eligible:
-            minutes = self._duration(wo, step, m)
-            if minutes is None:
-                no_rate.append(m.machine_id)
-            elif minutes > self.max_free[_key(m.machine_id)]:
-                too_long.append(f"{m.machine_id} ({minutes / 60:.1f} h)")
-                if self.max_free[_key(m.machine_id)] >= self.cal.total:
-                    too_long[-1] += f" which exceeds all {self.cal.total / 60:.0f} working hours in the horizon"
-            else:
-                options.append(_Option(_key(m.machine_id), minutes))
-        if options:
-            return options, ""
-        parts = []
-        if no_rate:
-            parts.append(f"no run rate or hours for {', '.join(no_rate)} (give hours or rate_per_hour)")
-        if too_long:
-            parts.append(
-                f"longer than any downtime-free working window on {', '.join(too_long)}; "
-                "split the order, increase horizon_days or allow overtime"
-            )
-        return [], "; ".join(parts) + "."
-
-    @staticmethod
-    def _duration(wo: ScheduleWorkOrder, step: RoutingStep, m: MachineSpec) -> int | None:
-        if step.hours is not None:
-            run = step.hours * 60
-        else:
-            rates = {_key(k): v for k, v in m.rates.items()}
-            rate = step.rate_per_hour or rates.get(_key(step.operation)) or m.rate_per_hour
-            if not rate:
-                return None
-            run = wo.qty / rate * 60
-        setup = step.setup_minutes if step.setup_minutes is not None else m.setup_minutes
-        return max(1, math.ceil(run + setup - 1e-9))
+    inp: ScheduleToolInput
+    L: int
+    days: list[date]
+    wcs: dict[str, CapacityLine]
+    reg: dict[str, int]
+    ot_min: dict[str, int]                       # 0 when overtime is not allowed there
+    blocked: dict[str, list[tuple[int, int]]]    # fixed busy intervals: downtime
+    wip: dict[str, list[tuple[int, int]]]        # wc -> [(start, load minutes)], in load order
+    down_days: dict[str, list[tuple[date, date]]]
+    jobs: list[ScheduleJob]                      # schedulable jobs, in priority order
+    ops: dict[str, list[_Op]]
+    release: dict[str, int]
+    due_idx: dict[str, int]
+    conflicts: list[ScheduleConflict] = field(default_factory=list)
 
 
-# ---------------------------------------------------------------------------
-# Solve
-# ---------------------------------------------------------------------------
+# --- time helpers ---------------------------------------------------------------------------
+
+def _fit(t: int, p: int, c: int, L: int) -> tuple[int, int]:
+    """Earliest (start, end) at or after t for p working minutes on a centre that can work
+    minutes [0, c) of each L-minute day."""
+    d, m = divmod(t, L)
+    if m >= c:
+        d, m = d + 1, 0
+    s = d * L + m
+    if p <= c - m:
+        return s, s + p
+    rest = p - (c - m)
+    k = math.ceil(rest / c)
+    return s, (d + k) * L + (rest - (k - 1) * c)
 
 
-def run_schedule(inp: ScheduleInput | dict[str, Any]) -> ScheduleResult:
-    """Build and solve the schedule (a dict is validated first)."""
-    from ortools.sat.python import cp_model
+def _place(busy: list[tuple[int, int]], t: int, p: int, c: int, L: int) -> tuple[int, int]:
+    """Earliest slot at or after t that overlaps nothing in `busy`."""
+    for _ in range(100_000):
+        s, e = _fit(t, p, c, L)
+        clash = [b for b in busy if b[0] < e and s < b[1]]
+        if not clash:
+            return s, e
+        t = max(b[1] for b in clash)
+    raise RuntimeError("no free slot found")
 
-    if not isinstance(inp, ScheduleInput):
-        inp = ScheduleInput.model_validate(inp)
-    t_begin = _time.perf_counter()
-    prob = _Problem(inp)
-    if prob.reasons:
-        return _empty(prob, "infeasible", {"status": "NOT_SOLVED", "reason": "input check failed"})
 
-    H = prob.cal.total
-    model = cp_model.CpModel()
-    starts: dict[tuple[str, int], Any] = {}
-    ends: dict[tuple[str, int], Any] = {}
-    chosen: dict[tuple[str, int], list[tuple[_Option, Any]]] = {}
-    intervals: dict[str, list[Any]] = {k: [] for k in prob.machines}
-    finish: dict[str, Any] = {}
-    tard_terms, finish_terms = [], []
+def _due_index(due: date, day0: date, cal) -> int:
+    """Index of the last working day on or before `due` (negative if before day0)."""
+    if due >= day0:
+        return working_days_after(day0, due, cal)
+    return -working_days_after(due, day0, cal)
 
-    for wo_id, tasks in prob.tasks.items():
-        prev_end = None
-        for k, task in enumerate(tasks):
-            s = model.new_int_var(prob.earliest[wo_id] if k == 0 else 0, H, f"s_{wo_id}_{k}")
-            e = model.new_int_var(0, H, f"e_{wo_id}_{k}")
-            lits = []
-            for opt in task.options:
-                p = model.new_constant(1) if len(task.options) == 1 else model.new_bool_var(f"p_{wo_id}_{k}_{opt.machine}")
-                iv = model.new_optional_interval_var(s, opt.duration, e, p, f"iv_{wo_id}_{k}_{opt.machine}")
-                intervals[opt.machine].append(iv)
-                for j, (a, b, _w) in enumerate(prob.downtime[opt.machine]):
-                    before = model.new_bool_var(f"dt_{wo_id}_{k}_{opt.machine}_{j}")
-                    model.add(e <= a).only_enforce_if([p, before])
-                    model.add(s >= b).only_enforce_if([p, ~before])
-                lits.append((opt, p))
-            model.add_exactly_one([p for _o, p in lits])
-            if prev_end is not None:
-                model.add(s >= prev_end)
-            starts[(wo_id, k)], ends[(wo_id, k)], chosen[(wo_id, k)] = s, e, lits
-            prev_end = e
-        finish[wo_id] = prev_end
-        tard = model.new_int_var(0, H, f"tard_{wo_id}")
-        model.add(tard >= prev_end - prob.deadline[wo_id])
-        weight = max(1, 100 // tasks[0].wo.priority)
-        tard_terms.append(weight * tard)
-        finish_terms.append(prev_end)
 
-    for k, ivs in intervals.items():
-        if ivs:
-            model.add_no_overlap(ivs)
-    big = (H + 1) * max(1, len(finish_terms))
-    model.minimize(sum(tard_terms) * big + sum(finish_terms))
+# --- setup ---------------------------------------------------------------------------------
 
-    solver = cp_model.CpSolver()
-    remaining = inp.time_limit_s - (_time.perf_counter() - t_begin) - SOLVER_MARGIN_S
-    solver.parameters.max_time_in_seconds = max(0.5, remaining)
-    solver.parameters.num_workers = NUM_WORKERS
-    solver.parameters.random_seed = RANDOM_SEED
-    t0 = _time.perf_counter()
-    status = solver.solve(model)
-    info = {"status": solver.status_name(status), "solve_time_s": round(_time.perf_counter() - t0, 3),
-            "wall_time_s": round(_time.perf_counter() - t_begin, 3),
-            "time_limit_s": inp.time_limit_s}
-    if status == cp_model.MODEL_INVALID:
-        raise ToolException(f"Internal error: invalid scheduling model ({model.validate()}).")
-    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        if status == cp_model.INFEASIBLE:
-            prob.reasons.append(
-                f"No schedule fits in the {inp.horizon_days}-day horizon with this capacity and downtime. "
-                "Increase horizon_days, allow overtime, add machines or split orders."
-            )
-        else:
-            prob.reasons.append(f"No feasible schedule found within {inp.time_limit_s:g} s.")
-        return _empty(prob, "infeasible", info)
-    info["objective"] = solver.objective_value
-
-    # -- read the solution --------------------------------------------------
-    result_wos: list[ScheduledWorkOrder] = []
+def _build(inp: ScheduleToolInput) -> _Problem:
+    cal = inp.calendar
+    day0 = first_working_day(inp.planning_start, cal)
+    wcs = {w.work_centre: w for w in inp.work_centres}
+    reg = {k: w.regular_min_per_day for k, w in wcs.items()}
+    ot_min = {}
+    for k, w in wcs.items():
+        allowed = inp.allow_overtime and (inp.ot_work_centres is None or k in inp.ot_work_centres)
+        ot_min[k] = w.ot_max_min_per_day if allowed else 0
+    L = max([reg[k] + ot_min[k] for k in wcs] + [1])
     conflicts: list[ScheduleConflict] = []
-    busy: dict[str, int] = {k: 0 for k in prob.machines}
-    for wo_id, tasks in prob.tasks.items():
-        wo = tasks[0].wo
-        ops = []
-        placed = []
-        for k, task in enumerate(tasks):
-            opt = next(o for o, p in chosen[(wo_id, k)] if solver.boolean_value(p))
-            a, b = solver.value(starts[(wo_id, k)]), solver.value(ends[(wo_id, k)])
-            busy[opt.machine] += b - a
-            placed.append((task, opt, a, b))
-            ops.append(Operation(
-                seq=task.step.seq, operation=task.step.operation, machine_id=prob.machines[opt.machine].machine_id,
-                start=prob.cal.start_at(a), end=prob.cal.end_at(b), qty=wo.qty,
-                uses_overtime=prob.cal.overtime_minutes(a, b) > 0,
-            ))
-        planned_finish = ops[-1].end
-        is_late = planned_finish.date() > wo.due_date
-        days_late = prob.cal.working_days_between(wo.due_date, planned_finish.date()) if is_late else 0
-        result_wos.append(ScheduledWorkOrder(
-            wo_id=wo_id, item_code=wo.item_code, qty=wo.qty, priority=wo.priority, due_date=wo.due_date,
-            planned_start=ops[0].start, planned_finish=planned_finish, is_late=is_late,
-            days_late=days_late, operations=ops,
-        ))
-        if is_late:
-            conflicts.extend(_explain_late(prob, wo, placed, days_late))
 
-    loads = []
-    for k, m in prob.machines.items():
-        down = sum(min(b, H) - max(a, 0) for a, b, _ in prob.downtime[k] if b > a)
-        avail = max(H - down, 0)
-        loads.append(MachineLoad(
-            machine_id=m.machine_id, busy_hours=round(busy[k] / 60, 2), available_hours=round(avail / 60, 2),
-            downtime_hours=round(down / 60, 2), utilization_pct=round(100 * busy[k] / avail, 1) if avail else 0.0,
-        ))
-    result = ScheduleResult(
-        status="optimal" if status == cp_model.OPTIMAL else "feasible",
-        work_orders=result_wos, conflicts=conflicts, machine_load=loads, infeasible_reasons=[],
-        violations=[], issues=prob.issues, solver=info,
-    )
-    result.violations = check_schedule(result, inp)
-    return result
+    down_days: dict[str, list[tuple[date, date]]] = {k: [] for k in wcs}
+    for dt in inp.downtime:
+        if dt.work_centre in wcs:
+            down_days[dt.work_centre].append((dt.start, dt.end_incl))
+    always_down = {k for k, w in wcs.items()
+                   if w.status.strip().upper().startswith("DOWN") and not down_days[k]}
+    for k in sorted(always_down):
+        conflicts.append(ScheduleConflict(type="machine_down", work_centre=k,
+                                          message=f"{k} is DOWN in the capacity plan with no return date; not used"))
+    for k in wcs:
+        if reg[k] <= 0 and k not in always_down:
+            always_down.add(k)
+
+    # Jobs, operations and their work-centre options.
+    jobs, ops, bad = [], {}, []
+    for job in sorted(inp.jobs, key=lambda j: (j.priority or 10**6, j.due_date, j.wo_id)):
+        if not job.operations:
+            bad.append((job, None, f"{job.wo_id} has no operations"))
+            continue
+        job_ops, problem = [], None
+        for op in sorted(job.operations, key=lambda o: o.seq):
+            if op.work_centre not in wcs:
+                problem = (op.work_centre, f"{job.wo_id} op {op.seq} ({op.operation}): work centre "
+                                           f"{op.work_centre} is not in the capacity plan")
+                break
+            cands = [op.work_centre] + [a for a in wcs[op.work_centre].alternates if a in wcs and a != op.work_centre]
+            options = []
+            for wc in cands:
+                if wc in always_down:
+                    continue
+                w = wcs[wc]
+                minutes = op.setup_min + job.qty * op.std_min_per_unit / (w.units * w.efficiency)
+                options.append(_Option(wc, max(1, int(round(minutes)))))
+            if not options:
+                problem = (op.work_centre, f"{job.wo_id} op {op.seq} ({op.operation}): {op.work_centre} "
+                                           f"and its alternates are all down for the whole horizon")
+                break
+            job_ops.append(_Op(job, op.seq, op.operation, options))
+        if problem:
+            bad.append((job, problem[0], problem[1]))
+            continue
+        jobs.append(job)
+        ops[job.wo_id] = job_ops
+    for job, wc, msg in bad:
+        conflicts.append(ScheduleConflict(type="infeasible", wo_id=job.wo_id, work_centre=wc, message=msg))
+
+    # Horizon: enough working days for everything run back to back, plus slack.
+    total = sum(max(o.minutes for o in op.options) for j in jobs for op in ops[j.wo_id])
+    total += sum(w.load_minutes for w in inp.wip)
+    min_cap = min([reg[k] for k in wcs if reg[k] > 0] + [480])
+    latest = max([(j.earliest_start or day0) for j in jobs] + [j.due_date for j in jobs] + [day0]
+                 + [e for v in down_days.values() for _, e in v])
+    n_days = working_days_after(day0, latest, cal) + math.ceil(total / min_cap) + 30
+    n_days = min(MAX_HORIZON_DAYS, n_days)
+    days = working_days_list(day0, n_days, cal)
+    index = {d: i for i, d in enumerate(days)}
+
+    blocked: dict[str, list[tuple[int, int]]] = {k: [] for k in wcs}
+    for k, windows in down_days.items():
+        for a, b in windows:
+            d = a
+            while d <= b:
+                if d in index:
+                    i = index[d]
+                    blocked[k].append((i * L, (i + 1) * L))
+                d += timedelta(days=1)
+    wip: dict[str, list[tuple[int, int]]] = {}
+    busy = {k: list(v) for k, v in blocked.items()}
+    for w in inp.wip:
+        if w.work_centre not in wcs or w.work_centre in always_down:
+            if w.work_centre not in wcs:
+                conflicts.append(ScheduleConflict(type="capacity_overload", work_centre=w.work_centre,
+                                                  message=f"WIP {w.order or ''} is on unknown work centre "
+                                                          f"{w.work_centre}; ignored"))
+            continue
+        p = int(round(w.load_minutes))
+        if p > 0:
+            k = w.work_centre
+            s0, e0 = _place(busy[k], busy_end(busy[k], wip.get(k)), p, reg[k], L)
+            busy[k].append((s0, e0))
+            wip.setdefault(k, []).append((s0, p))
+
+    release = {}
+    for j in jobs:
+        es = max(j.earliest_start or day0, day0)
+        es = first_working_day(es, cal)
+        release[j.wo_id] = working_days_after(day0, es, cal) * L
+        if j.earliest_start and j.earliest_start > inp.planning_start:
+            conflicts.append(ScheduleConflict(type="material_late", wo_id=j.wo_id,
+                                              message=f"{j.wo_id} cannot start before {es.isoformat()} (material ready)"))
+    due_idx = {j.wo_id: _due_index(j.due_date, day0, cal) for j in jobs}
+    return _Problem(inp, L, days, wcs, reg, ot_min, blocked, wip, down_days, jobs, ops, release, due_idx, conflicts)
 
 
-def _empty(prob: _Problem, status: str, info: dict[str, Any]) -> ScheduleResult:
-    return ScheduleResult(status=status, work_orders=[], conflicts=[], machine_load=[],
-                          infeasible_reasons=prob.reasons, violations=[], issues=prob.issues, solver=info)
+def busy_end(busy: list[tuple[int, int]], wip: Optional[list[tuple[int, int]]]) -> int:
+    """Where the next WIP load may start: after the previous WIP load on that centre."""
+    if not wip:
+        return 0
+    s_last = wip[-1][0]
+    return max(e for s, e in busy if s == s_last)
 
 
-def _explain_late(prob: _Problem, wo: ScheduleWorkOrder, placed, days_late: int) -> list[ScheduleConflict]:
-    """Why a work order is late: its own lead time, downtime, or competing orders."""
-    out = []
-    est = prob.earliest[wo.wo_id]
-    lower_bound = est + sum(min(o.duration for o in task.options) for task, *_ in placed)
-    late = f"{wo.wo_id} finishes {days_late} working day(s) after its due date {wo.due_date}"
-    if lower_bound > prob.deadline[wo.wo_id]:
-        start_note = f"cannot start before {prob.cal.start_at(est):%Y-%m-%d %H:%M}" if est else "starts at the planning start"
-        out.append(ScheduleConflict(
-            type="due_date_risk", wo_id=wo.wo_id,
-            message=f"{late}: it {start_note} and needs {(lower_bound - est) / 60:.1f} working hours even with every machine free.",
-        ))
-    else:
-        machines = sorted({prob.machines[o.machine].machine_id for _t, o, _a, _b in placed})
-        out.append(ScheduleConflict(
-            type="capacity_overload", wo_id=wo.wo_id,
-            message=f"{late}: {', '.join(machines)} are busy with other orders (priority {wo.priority}).",
-        ))
-    prev = est
-    for task, opt, a, _b in placed:
-        for da, db, w in prob.downtime[opt.machine]:
-            if prev < db and da < a:  # the operation waited across this window
-                out.append(ScheduleConflict(
-                    type="machine_down", wo_id=wo.wo_id, machine_id=w.machine_id,
-                    message=f"{task.step.operation} for {wo.wo_id} waits for {w.machine_id} {w.reason} "
-                            f"({_aware(w.start):%Y-%m-%d %H:%M} to {_aware(w.end):%Y-%m-%d %H:%M}).",
-                ))
-        prev = _b
+# --- greedy schedule (solver hint and fallback) ---------------------------------------------
+
+def _greedy(pb: _Problem) -> dict[tuple[str, int], _Placed]:
+    busy = {k: list(v) for k, v in pb.blocked.items()}
+    wip_end = {}
+    for k, loads in pb.wip.items():
+        t = 0
+        for s0, p in loads:
+            s, e = _place(busy[k], max(t, s0), p, pb.reg[k], pb.L)
+            busy[k].append((s, e))
+            t = e
+        wip_end[k] = t
+    out = {}
+    for job in pb.jobs:
+        t = pb.release[job.wo_id]
+        for op in pb.ops[job.wo_id]:
+            best = None
+            for o in op.options:
+                s, e = _place(busy[o.wc], max(t, wip_end.get(o.wc, 0)), o.minutes, pb.reg[o.wc], pb.L)
+                if best is None or e < best.end:
+                    best = _Placed(s, e, o.wc)
+            busy[best.wc].append((best.start, best.end))
+            out[(job.wo_id, op.seq)] = best
+            t = best.end
     return out
 
 
-# ---------------------------------------------------------------------------
-# Independent check (calendar time, no solver variables)
-# ---------------------------------------------------------------------------
+# --- CP-SAT ----------------------------------------------------------------------------------
 
+def _solve_cp(pb: _Problem, hint: dict[tuple[str, int], _Placed], time_limit: float):
+    from ortools.sat.python import cp_model
 
-def check_schedule(result: ScheduleResult, inp: ScheduleInput) -> list[str]:
-    """Hard-constraint violations in a schedule, checked directly on the datetimes."""
-    cal = WorkCalendar(inp)
-    violations: list[str] = []
-    by_machine: dict[str, list[tuple[datetime, datetime, str]]] = {}
-    wos = {w.wo_id: w for w in inp.work_orders}
-    for swo in result.work_orders:
-        wo = wos.get(swo.wo_id)
-        prev_end = None
-        for op in swo.operations:
-            label = f"{swo.wo_id} seq {op.seq}"
-            s, e = _aware(op.start), _aware(op.end)
-            if e <= s:
-                violations.append(f"{label}: ends before it starts.")
-            if not cal.within_hours(s, as_end=False) or not cal.within_hours(e, as_end=True):
-                violations.append(f"{label}: starts or ends outside working hours.")
-            if prev_end is not None and s < prev_end:
-                violations.append(f"{label}: starts before the previous operation ends.")
+    L = pb.L
+    hint_end = max([p.end for p in hint.values()] + [0])
+    due_max = max([max(0, d) for d in pb.due_idx.values()] + [0])
+    n_days = min(len(pb.days), max(hint_end // L + 1, due_max + 1) + 10)
+    H = n_days * L
+    m = cp_model.CpModel()
+    ot = {k: m.NewBoolVar(f"ot_{k}") for k in pb.wcs if pb.ot_min[k] > 0}
+    intervals: dict[str, list] = {k: [m.NewFixedSizeIntervalVar(a, b - a, f"blk_{k}_{a}") for a, b in v if a < H]
+                                  for k, v in pb.blocked.items()}
+
+    def day_of(t, tag: str):
+        d = m.NewIntVar(0, n_days, f"d_{tag}")
+        m.AddDivisionEquality(d, t, L)
+        return d
+
+    def task(tag: str, options: list[_Option]):
+        """Start/end vars and one optional interval per work-centre option. The elapsed
+        time e - s is the working minutes plus the overnight gaps it spans."""
+        s = m.NewIntVar(0, H, f"s_{tag}")
+        e = m.NewIntVar(1, H, f"e_{tag}")
+        size = m.NewIntVar(1, H, f"z_{tag}")
+        m.Add(size == e - s)
+        em1 = m.NewIntVar(0, H, f"em1_{tag}")
+        m.Add(em1 == e - 1)
+        sd, ed = day_of(s, f"s{tag}"), day_of(em1, f"e{tag}")
+        pres = []
+        for o in options:
+            x = m.NewBoolVar(f"x_{tag}_{o.wc}") if len(options) > 1 else m.NewConstant(1)
+            pres.append((x, o))
+            intervals[o.wc].append(m.NewOptionalIntervalVar(s, size, e, x, f"i_{tag}_{o.wc}"))
+            caps = [(pb.reg[o.wc], [ot[o.wc].Not()] if o.wc in ot else [])]
+            if o.wc in ot:
+                caps.append((pb.reg[o.wc] + pb.ot_min[o.wc], [ot[o.wc]]))
+            for c, lits in caps:
+                enf = [x] + lits
+                m.Add(e - s == o.minutes + (ed - sd) * (L - c)).OnlyEnforceIf(enf)
+                m.Add(s - L * sd <= c - 1).OnlyEnforceIf(enf)
+                m.Add(e - L * ed <= c).OnlyEnforceIf(enf)
+        m.AddExactlyOne([x for x, _ in pres])
+        return s, e, ed, pres
+
+    # WIP first on its work centre; new work on that centre starts after it.
+    wip_end: dict[str, object] = {}
+    for k, loads in pb.wip.items():
+        prev = None
+        for i, (s0, p) in enumerate(loads):
+            s, e, _, _ = task(f"wip_{k}_{i}", [_Option(k, p)])
+            m.Add(s >= (s0 if prev is None else prev))
+            prev = e
+        wip_end[k] = prev
+
+    var, late, finish = {}, {}, {}
+    for job in pb.jobs:
+        prev_end, ed = None, None
+        for op in pb.ops[job.wo_id]:
+            key = (job.wo_id, op.seq)
+            s, e, ed, pres = task(f"{job.wo_id}_{op.seq}", op.options)
+            m.Add(s >= (pb.release[job.wo_id] if prev_end is None else prev_end))
+            for x, o in pres:
+                if o.wc in wip_end:
+                    m.Add(s >= wip_end[o.wc]).OnlyEnforceIf(x)
             prev_end = e
-            by_machine.setdefault(_key(op.machine_id), []).append((s, e, label))
-            for w in inp.downtime:
-                if _key(w.machine_id) == _key(op.machine_id) and s < _aware(w.end) and _aware(w.start) < e:
-                    violations.append(f"{label}: overlaps {w.machine_id} downtime {w.start} to {w.end}.")
-        if wo is not None and wo.earliest_start is not None and swo.operations:
-            est = wo.earliest_start if isinstance(wo.earliest_start, datetime) else datetime.combine(wo.earliest_start, time(0), SL_TZ)
-            if _aware(swo.operations[0].start) < _aware(est):
-                violations.append(f"{swo.wo_id}: starts before its earliest start {wo.earliest_start}.")
-    for machine, ops in by_machine.items():
-        ops.sort()
-        for (s1, e1, l1), (s2, e2, l2) in zip(ops, ops[1:]):
-            if s2 < e1:
-                violations.append(f"Machine {machine} double-booked: {l1} and {l2}.")
-    return violations
+            var[key] = (s, e, pres)
+            h = hint.get(key)
+            if h is not None:
+                m.AddHint(s, h.start)
+                m.AddHint(e, h.end)
+                for x, o in pres:
+                    if len(pres) > 1:
+                        m.AddHint(x, o.wc == h.wc)
+        lt = m.NewIntVar(0, n_days + abs(min(0, pb.due_idx[job.wo_id])), f"late_{job.wo_id}")
+        m.Add(lt >= ed - pb.due_idx[job.wo_id])
+        late[job.wo_id] = lt
+        finish[job.wo_id] = prev_end
+    for ivs in intervals.values():
+        if len(ivs) > 1:
+            m.AddNoOverlap(ivs)
+    for v in ot.values():
+        m.AddHint(v, False)
+
+    n_ot = sum(ot.values()) if ot else 0
+    if pb.inp.objective == "min_makespan":
+        mk = m.NewIntVar(0, H, "makespan")
+        m.AddMaxEquality(mk, list(finish.values()))
+        m.Minimize(OBJ_LATE * mk + OBJ_OT * n_ot + sum(late.values()))
+    else:
+        m.Minimize(OBJ_LATE * sum(late.values()) + OBJ_OT * n_ot + sum(finish.values()))
+
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit
+    solver.parameters.num_workers = NUM_WORKERS
+    solver.parameters.random_seed = 0
+    status = solver.Solve(m)
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        return None, solver.StatusName(status), set()
+    placed = {}
+    for key, (s, e, pres) in var.items():
+        wc = next(o.wc for x, o in pres if solver.Value(x))
+        placed[key] = _Placed(solver.Value(s), solver.Value(e), wc)
+    ot_on = {k for k, v in ot.items() if solver.Value(v)}
+    return placed, "optimal" if status == cp_model.OPTIMAL else "feasible", ot_on
 
 
-# ---------------------------------------------------------------------------
-# The tool
-# ---------------------------------------------------------------------------
+# --- output ----------------------------------------------------------------------------------
 
-SCHEDULE_TOOL_DESCRIPTION = (
-    "Production scheduling with a constraint solver (OR-Tools CP-SAT, at most 10 s). Give it the work "
-    "orders (quantity, due date, priority, earliest start such as the material-ready date from mrp_tool, "
-    "and the routing: operations in sequence with allowed machines and run time or rate), the machines "
-    "(what they can do, units per hour, setup minutes), maintenance and other downtime windows, and the "
-    "working calendar (work days, shift hours, holidays, overtime end). It returns a schedule that never "
-    "double-books a machine, never overlaps downtime and keeps operation order, minimising priority-"
-    "weighted lateness; per work order the operations with machine and times (WorkOrderPlan format), "
-    "planned start and finish, is_late and days_late; conflicts explaining late orders; machine load; "
-    "or, if no schedule is possible, infeasible_reasons. Overtime is used only if allow_overtime is true."
-)
+def _clock(pb: _Problem, t: int, end: bool) -> datetime:
+    d, mnt = divmod(t - 1 if end else t, pb.L)
+    if end:
+        mnt += 1
+    return datetime.combine(pb.days[d], pb.inp.calendar.shift_start, tzinfo=FACTORY_TZ) + timedelta(minutes=mnt)
 
 
-def make_schedule_tool() -> StructuredTool:
-    def schedule_tool(**kwargs: Any) -> str:
-        return run_schedule(ScheduleInput.model_validate(kwargs)).model_dump_json()
+def _output(pb: _Problem, placed: dict[tuple[str, int], _Placed], ot_on: set[str]) -> list[ScheduledWorkOrder]:
+    cal, out = pb.inp.calendar, []
+    for job in pb.jobs:
+        ops = []
+        for op in pb.ops[job.wo_id]:
+            p = placed[(job.wo_id, op.seq)]
+            sd, ed = p.start // pb.L, (p.end - 1) // pb.L
+            uses_ot = p.wc in ot_on and (ed > sd or p.end - ed * pb.L > pb.reg[p.wc])
+            ops.append(Operation(seq=op.seq, operation=op.name, machine_id=p.wc, start=_clock(pb, p.start, False),
+                                 end=_clock(pb, p.end, True), qty=job.qty, uses_overtime=uses_ot))
+        finish = ops[-1].end
+        days_late = working_days_after(job.due_date, finish.date(), cal)
+        out.append(ScheduledWorkOrder(wo_id=job.wo_id, planned_start=ops[0].start, planned_finish=finish,
+                                      is_late=days_late > 0, days_late=days_late, operations=ops))
+    return out
 
-    return StructuredTool.from_function(
-        func=schedule_tool,
-        name="schedule_tool",
-        description=SCHEDULE_TOOL_DESCRIPTION,
-        args_schema=ScheduleInput,
-        handle_tool_error=True,
-        handle_validation_error=validation_error_message,
-    )
+
+def _report(pb: _Problem, scheduled: list[ScheduledWorkOrder], ot_on: set[str]) -> list[ScheduleConflict]:
+    conflicts = list(pb.conflicts)
+    used: dict[str, set[str]] = {}
+    for w in scheduled:
+        for op in w.operations:
+            used.setdefault(op.machine_id, set()).add(w.wo_id)
+    for k, windows in pb.down_days.items():
+        for a, b in windows:
+            affected = sorted({j.wo_id for j in pb.jobs for op in pb.ops[j.wo_id]
+                               if any(o.wc == k for o in op.options)})
+            if affected:
+                conflicts.append(ScheduleConflict(
+                    type="machine_down", work_centre=k,
+                    message=f"{k} is down {a.isoformat()} to {b.isoformat()}; work for {', '.join(affected)} "
+                            f"was scheduled around it"))
+    for k in sorted(ot_on):
+        conflicts.append(ScheduleConflict(
+            type="capacity_overload", work_centre=k,
+            message=f"{k} needs overtime (up to {pb.ot_min[k]} min/day) to reduce lateness; needs approval"))
+    for w in scheduled:
+        if w.is_late:
+            job = next(j for j in pb.jobs if j.wo_id == w.wo_id)
+            conflicts.append(ScheduleConflict(
+                type="due_date_risk", wo_id=w.wo_id, work_centre=w.operations[-1].machine_id,
+                message=f"{w.wo_id} finishes {w.planned_finish.date().isoformat()}, {w.days_late} working day(s) "
+                        f"after its due date {job.due_date.isoformat()}"))
+    return conflicts
+
+
+def schedule_tool(inp: ScheduleToolInput) -> ScheduleToolOutput:
+    t0 = _time.monotonic()
+    try:
+        pb = _build(inp)
+        hint = _greedy(pb) if pb.jobs else {}
+        placed, status, ot_on = (_solve_cp(pb, hint, inp.time_limit_s) if pb.jobs else ({}, "optimal", set()))
+        if placed is None:
+            placed, status, ot_on = hint, "timeout", set()
+        scheduled = _output(pb, placed, ot_on)
+        conflicts = _report(pb, scheduled, ot_on)
+    except Exception as exc:  # noqa: BLE001 - the Planner gets a readable error, not a stack trace
+        return ScheduleToolOutput(status="error", infeasibility_reason=f"{type(exc).__name__}: {exc}",
+                                  solve_time_s=round(_time.monotonic() - t0, 3))
+    infeasible = [c.message for c in conflicts if c.type == "infeasible"]
+    if infeasible:
+        status = "infeasible"
+    return ScheduleToolOutput(status=status, scheduled=scheduled, conflicts=conflicts,
+                              infeasibility_reason="; ".join(infeasible) or None,
+                              solve_time_s=round(_time.monotonic() - t0, 3))

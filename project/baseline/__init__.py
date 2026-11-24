@@ -1,1 +1,1 @@
-"""Single-agent baseline: one Claude Sonnet 5.5 agent with the shared harness and tools."""
+"""Single-agent baseline (system B): one Sonnet 5.5 agent with the same harness, tools and prompts."""

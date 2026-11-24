@@ -1,0 +1,325 @@
+{
+  "bundle_id": "B_S2_clean",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S2",
+  "scenario_name": "Rush order",
+  "mess": "clean",
+  "seed": 1009,
+  "planning_start": "2026-11-30",
+  "orders": [
+    {
+      "po_no": "AOI/PO/2026/4330",
+      "customer_id": "CUS-11",
+      "po_date": "2026-11-25",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "SHF-RCK-05",
+          "qty": 270,
+          "uom": "pcs",
+          "due_date": "2026-12-12",
+          "unit_price": 21900.0
+        }
+      ]
+    },
+    {
+      "po_no": "MWS5934",
+      "customer_id": "CUS-13",
+      "po_date": "2026-11-29",
+      "rush": true,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "SHF-RCK-05",
+          "qty": 160,
+          "uom": "pcs",
+          "due_date": "2026-12-08",
+          "unit_price": 21900.0
+        }
+      ]
+    }
+  ],
+  "stock": {
+    "STL-TUB-25": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26650",
+          "qty": 76.39,
+          "status": "OK",
+          "received": "2026-11-21"
+        },
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26731",
+          "qty": 50.93,
+          "status": "OK",
+          "received": "2026-11-06"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "STL-SHT-2": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26170",
+          "qty": 367.93,
+          "status": "OK",
+          "received": "2026-11-05"
+        },
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26801",
+          "qty": 245.28,
+          "status": "OK",
+          "received": "2026-11-19"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "STL-SHT-1": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26990",
+          "qty": 5683.18,
+          "status": "OK",
+          "received": "2026-11-14"
+        },
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26541",
+          "qty": 3788.78,
+          "status": "OK",
+          "received": "2026-11-26"
+        }
+      ],
+      "reserved": 342.36
+    },
+    "STL-ANG-40": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26380",
+          "qty": 2798.01,
+          "status": "OK",
+          "received": "2026-11-08"
+        },
+        {
+          "location": "01 - Raw Material",
+          "lot": "STL-26341",
+          "qty": 1524.68,
+          "status": "OK",
+          "received": "2026-11-14"
+        }
+      ],
+      "reserved": 336.59
+    },
+    "PWD-BLK": {
+      "lots": [
+        {
+          "location": "02 - Paint Store",
+          "lot": "PWD-26430",
+          "qty": 266.73,
+          "status": "OK",
+          "received": "2026-11-06"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "PWD-GRY": {
+      "lots": [
+        {
+          "location": "02 - Paint Store",
+          "lot": "PWD-26400",
+          "qty": 733.75,
+          "status": "OK",
+          "received": "2026-11-15"
+        }
+      ],
+      "reserved": 19.74
+    },
+    "CST-50": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "CST-26160",
+          "qty": 2479.0,
+          "status": "OK",
+          "received": "2026-10-24"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "GAS-LFT": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "GAS-26400",
+          "qty": 271.0,
+          "status": "OK",
+          "received": "2026-11-23"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "SCR-M6-20": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "SCR-26310",
+          "qty": 439.0,
+          "status": "OK",
+          "received": "2026-10-30"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BLT-M8-16": {
+      "lots": [
+        {
+          "location": "01 - Raw Material",
+          "lot": "BLT-26240",
+          "qty": 11592.0,
+          "status": "OK",
+          "received": "2026-10-24"
+        }
+      ],
+      "reserved": 627.0
+    },
+    "PLY-SEAT": {
+      "lots": [
+        {
+          "location": "03 - Upholstery",
+          "lot": "PLY-26670",
+          "qty": 86.0,
+          "status": "OK",
+          "received": "2026-11-04"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FOAM-40": {
+      "lots": [
+        {
+          "location": "03 - Upholstery",
+          "lot": "FOAM-26690",
+          "qty": 88.0,
+          "status": "OK",
+          "received": "2026-11-26"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FAB-UPH-BLK": {
+      "lots": [
+        {
+          "location": "03 - Upholstery",
+          "lot": "FAB-26410",
+          "qty": 639.98,
+          "status": "OK",
+          "received": "2026-10-29"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-CHR": {
+      "lots": [
+        {
+          "location": "04 - Packing",
+          "lot": "CTN-26230",
+          "qty": 148.0,
+          "status": "OK",
+          "received": "2026-11-02"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-SHF": {
+      "lots": [
+        {
+          "location": "04 - Packing",
+          "lot": "CTN-26770",
+          "qty": 592.0,
+          "status": "OK",
+          "received": "2026-11-02"
+        }
+      ],
+      "reserved": 53.0
+    }
+  },
+  "open_pos": [
+    {
+      "po_no": "681",
+      "supplier_id": "SUP-12",
+      "order_date": "2026-11-23",
+      "eta": "2026-11-30",
+      "eta_printed": "2026-11-30",
+      "lines": [
+        {
+          "item": "PWD-GRY",
+          "qty": 120.0,
+          "price": 2880.0
+        }
+      ]
+    }
+  ],
+  "downtime": [],
+  "maintenance_noise": [
+    {
+      "wc": "LAS-01",
+      "machine": "LAS-01 Laser source",
+      "start": "2026-11-21",
+      "end": null,
+      "hours": 4.9,
+      "reason": "Electrical fault",
+      "status": "Closed",
+      "remarks": "Contactor replaced, tested OK"
+    }
+  ],
+  "wip": [
+    {
+      "wo": "PRD-366",
+      "item": "SHF-RCK-05",
+      "wc": "LAS-01",
+      "remaining_qty": 40,
+      "minutes": 305.9,
+      "done_qty": 10,
+      "customer": "CUS-11"
+    },
+    {
+      "wo": "PRD-857",
+      "item": "SHF-RCK-05",
+      "wc": "PRS-01",
+      "remaining_qty": 1570,
+      "minutes": 2854.5,
+      "done_qty": 1480,
+      "customer": "CUS-13"
+    }
+  ],
+  "conflicts": [],
+  "events": [
+    {
+      "type": "rush_order",
+      "po_no": "MWS5934"
+    }
+  ],
+  "policy": {
+    "regular_hours_week": 48,
+    "max_total_hours_week": 60,
+    "max_ot_hours_day": 2,
+    "max_ot_hours_week": 12,
+    "days_off_per_7": 1,
+    "ot_voluntary": true,
+    "ot_premium_pct": 125
+  },
+  "ot_proposal": null,
+  "defects": [],
+  "layouts": {
+    "customer_po": 1,
+    "supplier_invoice": 2
+  }
+}

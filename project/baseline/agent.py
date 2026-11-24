@@ -1,177 +1,243 @@
-"""The single-agent baseline (system ``B``).
+"""Single-agent baseline (system B), the runner backend for mode="baseline".
 
-One Claude Sonnet 5.5 agent reads the bundle, plans and checks, using exactly
-the same harness (``project/core/harness.py``), tools
-(``project/tools/registry.py``), budgets and output schema as the multi-agent
-system. Only the architecture differs: one agent and one context instead of
-Intake -> Planner -> Checker.
+One Sonnet 5.5 agent reads the documents, plans and checks in one conversation. Everything
+except the architecture is shared with the multi-agent system, so the comparison is fair:
 
-Trace for one run (API.md §4.4 steps for baseline: ``agent``, ``approval``)::
+| | multi-agent | baseline |
+|---|---|---|
+| LLM calls, budget, `llm_call` traces | multi_agent/llm.py `call_llm` + RunContext | same |
+| Model | core/models.py registry | same (`agent` -> Sonnet 5.5) |
+| mrp_tool / schedule_tool / rule_check | multi_agent/tools.py `run_tool` -> project/tools | same |
+| Tool descriptions | multi_agent/tools.py SPECS | same (rule_check also takes the draft, see below) |
+| How a document reaches the model | multi_agent/intake.py `document_content` | same, via read_document |
+| Prompts | multi_agent/prompts/*.md | the three combined (baseline/prompt.py) |
+| Final answer -> WorkOrderPlan | planner.py `PlannerDraft` + `assemble_plan` | same |
 
-    run_start -> agent_start(agent) -> llm_call / tool_call ... -> agent_end(agent)
-      -> handoff(agent -> approval) -> interrupt(approval)            awaiting approval
-                                    -> human_decision -> run_end      auto_approve
-    any failure -> error -> agent_end -> run_end(failed)
+rule_check: the Checker passes a full WorkOrderPlan. The single agent passes its draft (the
+same JSON as its final answer); the plan is assembled from its latest mrp_tool and
+schedule_tool outputs exactly as for the final answer, and material readiness comes from
+mrp_tool, as in the Checker.
 
-``run_baseline`` is what ``runner.start_run(mode="baseline")`` calls.
-Reject-and-resume is added on top of :class:`BaselineSession` (Task 7).
+Trace (API.md §4.4 steps for baseline: `agent`, `approval`):
+    agent_start -> llm_call / tool_call ... -> agent_end -> handoff(agent -> approval) -> interrupt
+    reject: handoff(approval -> agent) -> agent_start ... -> interrupt (new plan version)
+The runner emits run_start, run_end and human_decision, and handles auto_approve.
 """
-
 from __future__ import annotations
 
+import threading
+import time
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
-from langchain_core.language_models import BaseChatModel
-from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, ToolMessage
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from project.core.harness import AgentHandle, RunBudget, create_harness_agent, run_agent
-from project.core.schemas import (
-    SCHEMA_VERSION,
-    RunConfig,
-    RunError,
-    RunResult,
-    WorkOrderPlan,
-)
-from project.core.tracing import Emit, Tracer, now
-from project.baseline.prompts import BaselinePrompt, build_system_prompt, build_user_message
-from project.tools.loaders import document_list_text, inputs_dir
-from project.tools.registry import build_tools
+from core.schemas import (ApprovalDecision, CapacityLine, CustomerPOLine, DowntimeWindow, FactoryPolicyFields,
+                          PlanningCalendar, RuleCheckInput, RunConfig, RunError, RunResult, WorkOrderPlan)
+from multi_agent.context import Emit, RunContext, close_ctx, open_ctx
+from multi_agent.intake import document_content, list_documents
+from multi_agent.llm import call_llm, chat_model, parse_json_reply, spec_for
+from multi_agent.planner import PlanAssemblyError, PlannerDraft, assemble_plan
+from multi_agent.tools import SPECS, anthropic_tool_defs, dump, run_tool
 
-BASELINE_MODEL = "claude-sonnet-5-5"
-SYSTEM_ID = "B"
-AGENT_NAME = "agent"
+from .prompt import prompt_version, system_prompt
+
+AGENT = "agent"
+MAX_AGENT_TURNS = 40  # the run budget (40 LLM calls) is the real limit
+
+
+class BaselineError(RuntimeError):
+    pass
+
+
+class BaselineRuleCheckArgs(BaseModel):
+    """rule_check input for the single agent: its draft instead of a full plan."""
+    model_config = ConfigDict(extra="forbid")
+    draft: PlannerDraft = Field(description="Your draft plan: the same JSON as your final answer")
+    policy: FactoryPolicyFields = FactoryPolicyFields()
+    work_centres: list[CapacityLine]
+    downtime: list[DowntimeWindow] = []
+    order_lines: list[CustomerPOLine] = Field(default=[], description="Customer PO lines, for qty_mismatch checks")
+    calendar: PlanningCalendar = PlanningCalendar()
+
+
+READ_DOCUMENT_TOOL = {
+    "name": "read_document",
+    "description": ("Read one document of the bundle by file name. Spreadsheets come back as tab-separated "
+                    "rows (r1, r2, ...), CSV files likewise, PDFs as text per page with the PDF itself attached "
+                    "when its text layer is thin (a scan), images as images."),
+    "input_schema": {"type": "object", "additionalProperties": False, "required": ["file_name"],
+                     "properties": {"file_name": {"type": "string",
+                                                  "description": "Exact file name from the document list"}}},
+}
+RULE_CHECK_TOOL = {
+    "name": "rule_check",
+    "description": (SPECS["rule_check"].description + " Pass your draft plan as `draft` (the same JSON as your "
+                    "final answer); the plan is assembled from your latest mrp_tool and schedule_tool outputs, "
+                    "and material readiness comes from mrp_tool."),
+    "input_schema": BaselineRuleCheckArgs.model_json_schema(),
+}
+TOOLS = [READ_DOCUMENT_TOOL, *anthropic_tool_defs(["mrp_tool", "schedule_tool"]), RULE_CHECK_TOOL]
 
 
 @dataclass
 class BaselineSession:
-    """Everything one baseline run needs between its start and a later resume."""
-
+    """One run's conversation, kept between start() and resume() (in this process)."""
     run_id: str
-    bundle_dir: Path
+    inputs_dir: Path
     bundle_id: str
-    config: RunConfig
-    tracer: Tracer
-    budget: RunBudget
-    handle: AgentHandle
-    prompt: BaselinePrompt
-    planning_start: date | None
+    messages: list[BaseMessage]
+    tool_outputs: dict[str, Any] = field(default_factory=dict)
+    plan: Optional[WorkOrderPlan] = None
     plan_version: int = 0
-    plans: list[WorkOrderPlan] = field(default_factory=list)
-
-    @property
-    def plan(self) -> WorkOrderPlan | None:
-        return self.plans[-1] if self.plans else None
 
 
-def create_session(
-    run_id: str,
-    bundle_dir: Path | str,
-    config: RunConfig,
-    emit: Emit,
-    *,
-    planning_start: date | None = None,
-    run_dir: Path | str | None = None,
-    model: str | BaseChatModel = BASELINE_MODEL,
-) -> BaselineSession:
-    """Build the agent for one run. ``model`` is always Sonnet 5.5 outside tests."""
-    bundle_dir = Path(bundle_dir)
-    if not inputs_dir(bundle_dir).is_dir():
-        raise FileNotFoundError(f"Bundle folder not found: {bundle_dir}")
-    tracer = Tracer(run_id, emit=emit, run_dir=run_dir)
-    budget = RunBudget(config.budgets)
-    prompt = build_system_prompt()
-    tools = build_tools(bundle_dir)
-    handle = create_harness_agent(
-        name=AGENT_NAME,
-        model=model,
-        tools=list(tools.values()),
-        system_prompt=prompt.text,
-        tracer=tracer,
-        budget=budget,
-        output_schema=WorkOrderPlan,
-        checkpointer=InMemorySaver(),  # keeps the conversation for reject-and-resume
-    )
-    return BaselineSession(
-        run_id=run_id, bundle_dir=bundle_dir, bundle_id=bundle_dir.name, config=config, tracer=tracer,
-        budget=budget, handle=handle, prompt=prompt, planning_start=planning_start,
-    )
+_SESSIONS: dict[str, BaselineSession] = {}
+_SESSIONS_LOCK = threading.Lock()
 
 
-def finalize_plan(plan: WorkOrderPlan, bundle_id: str) -> WorkOrderPlan:
-    """Set the bookkeeping fields the system owns, whatever the model wrote there."""
-    return plan.model_copy(update={
-        "schema_version": SCHEMA_VERSION, "bundle_id": bundle_id, "system_id": SYSTEM_ID,
-        "created_at": now(), "checker": None,
-    })
+# --- runner backend ------------------------------------------------------------------------
+
+def start(run_id: str, inputs_dir: Path, config: RunConfig, emit: Emit) -> RunResult:
+    inputs_dir = Path(inputs_dir)
+    bundle_id = inputs_dir.parent.name if inputs_dir.name == "inputs" else inputs_dir.name
+    ctx = open_ctx(run_id, config, emit)
+    ctx.begin_segment()
+    try:
+        docs = [p.name for p in list_documents(inputs_dir)]
+        user = (f"Bundle: {bundle_id}\n\nDocuments in the bundle ({len(docs)}):\n"
+                + "\n".join(f"- {d}" for d in docs)
+                + "\n\nRead the documents, plan with the tools, check the plan, then give the final draft JSON.")
+        session = BaselineSession(run_id, inputs_dir, bundle_id, [SystemMessage(system_prompt()), HumanMessage(user)])
+        with _SESSIONS_LOCK:
+            _SESSIONS[run_id] = session
+        return _round(ctx, session, "Planning")
+    except BaseException:
+        _forget(run_id)
+        raise
+    finally:
+        ctx.end_segment()
 
 
-def _metrics(session: BaselineSession) -> dict[str, Any]:
-    b = session.budget
-    return {"llm_calls": b.llm_calls, "tokens": b.tokens, "elapsed_s": round(b.elapsed_s, 1)}
+def resume(run_id: str, decision: ApprovalDecision, config: RunConfig, emit: Emit) -> RunResult:
+    with _SESSIONS_LOCK:
+        session = _SESSIONS.get(run_id)
+    if session is None or session.plan is None:
+        return RunResult(run_id=run_id, status="failed",
+                         error=RunError(code="internal", message=f"run {run_id} is not waiting for approval"))
+    if decision.decision == "approve":
+        _forget(run_id)
+        return RunResult(run_id=run_id, status="completed", plan=session.plan, plan_version=session.plan_version)
+
+    ctx = open_ctx(run_id, config, emit)
+    ctx.begin_segment()
+    try:
+        ctx.handoff("approval", AGENT, f"Approval → Agent: rejected plan v{session.plan_version}: {decision.notes}",
+                    {"notes": decision.notes})
+        # Same wording as the Planner gets on a rejection (planner._context_message).
+        session.messages.append(HumanMessage(
+            "## The human planner rejected an earlier plan. Their notes are binding constraints:\n"
+            f"- {decision.notes or ''}\n\n"
+            "Your last tool outputs are still valid if you do not change their inputs; call the tools again for "
+            "anything the notes change. Then give the corrected final draft JSON."))
+        return _round(ctx, session, "Re-planning after human rejection")
+    except BaseException:
+        _forget(run_id)
+        raise
+    finally:
+        ctx.end_segment()
 
 
-def _fail(session: BaselineSession, error: RunError) -> RunResult:
-    session.tracer.emit("run_end", summary=f"Run failed: {error.code}",
-                        payload={"status": "failed", "error": error.model_dump(), **_metrics(session)})
-    return RunResult(status="failed", plan=session.plan, error=error)
+# --- the agent loop ----------------------------------------------------------------------
+
+def _round(ctx: RunContext, session: BaselineSession, reason: str) -> RunResult:
+    """Run the agent until it gives a valid final draft; then wait for approval."""
+    spec = spec_for(AGENT, ctx.config)
+    llm, model_id = chat_model(AGENT, spec)
+    version = session.plan_version + 1
+    ctx.emit("agent_start", agent=AGENT, model=model_id, summary=f"{reason} (plan v{version})",
+             payload={"prompt_version": prompt_version(), "plan_version": version})
+
+    plan: Optional[WorkOrderPlan] = None
+    for _ in range(MAX_AGENT_TURNS):
+        reply = call_llm(ctx, AGENT, llm, model_id, session.messages, tools=TOOLS, purpose=f"plan v{version}")
+        session.messages.append(reply)
+        if reply.tool_calls:
+            for tc in reply.tool_calls:
+                session.messages.append(_run_tool_call(ctx, session, tc))
+            continue
+        try:
+            draft = PlannerDraft.model_validate(parse_json_reply(reply))
+            plan = assemble_plan(draft, session.tool_outputs, bundle_id=session.bundle_id,
+                                 system_id=ctx.config.system_id)
+            break
+        except (ValueError, ValidationError) as exc:  # same repair message as the Planner
+            session.messages.append(HumanMessage(
+                f"Your final answer could not be used: {str(exc)[:2000]}\n"
+                "Fix it (call the tools again if needed) and reply with the corrected draft JSON."))
+    if plan is None:
+        raise BaselineError(f"Baseline agent gave no valid plan in {MAX_AGENT_TURNS} turns")
+
+    session.plan, session.plan_version = plan, version
+    summary = (f"plan v{version}: {len(plan.work_orders)} WO, {len(plan.shortages)} shortage(s), "
+               f"{len(plan.flags)} flag(s), {sum(w.is_late for w in plan.work_orders)} late")
+    ctx.emit("agent_end", agent=AGENT, model=model_id, summary=summary, payload={"plan_version": version})
+    ctx.handoff(AGENT, "approval", f"Agent → Approval: {summary}", {"plan_version": version})
+    ctx.emit("interrupt", agent="approval", summary=f"Plan v{version} waiting for approval",
+             payload={"plan_version": version})
+    return RunResult(run_id=session.run_id, status="awaiting_approval", plan=plan, plan_version=version)
 
 
-def _after_agent(session: BaselineSession, output: Any, error: RunError | None) -> RunResult:
-    """Turn the agent's result into a plan version and either wait for approval or finish."""
-    if error is not None:
-        return _fail(session, error)
-    if output is None:
-        return _fail(session, RunError(code="schema_invalid", message="The agent finished without a plan."))
-    plan = finalize_plan(output, session.bundle_id)
-    session.plans.append(plan)
-    session.plan_version += 1
-    t = session.tracer
-    t.handoff(AGENT_NAME, "approval",
-              f"Agent → Approval: plan v{session.plan_version} ({len(plan.work_orders)} WO, "
-              f"{len(plan.shortages)} shortage(s), {len(plan.flags)} flag(s))",
-              payload={"plan_version": session.plan_version})
-    if session.config.auto_approve:
-        t.emit("human_decision", agent="approval", summary=f"Plan v{session.plan_version} auto-approved (benchmark run)",
-               payload={"decision": "approve", "auto": True, "plan_version": session.plan_version})
-        t.emit("run_end", summary="Run completed",
-               payload={"status": "completed", "plan_version": session.plan_version, **_metrics(session)})
-        return RunResult(status="completed", plan=plan)
-    t.emit("interrupt", agent="approval", summary=f"Waiting for human approval of plan v{session.plan_version}",
-           payload={"plan_version": session.plan_version, **_metrics(session)})
-    return RunResult(status="awaiting_approval", plan=plan)
+def _run_tool_call(ctx: RunContext, session: BaselineSession, tc: dict) -> ToolMessage:
+    name, args, call_id = tc.get("name"), tc.get("args") or {}, tc["id"]
+    try:
+        if name == "read_document":
+            return ToolMessage(_read_document(ctx, session, args), tool_call_id=call_id)
+        if name in ("mrp_tool", "schedule_tool"):
+            out = run_tool(ctx, AGENT, name, args)
+            session.tool_outputs[name] = out.model_dump(mode="json")
+            return ToolMessage(dump(out), tool_call_id=call_id)
+        if name == "rule_check":
+            return ToolMessage(dump(run_tool(ctx, AGENT, "rule_check", _rule_check_input(session, args))),
+                               tool_call_id=call_id)
+        return ToolMessage(f"Unknown tool {name!r}. Available: {[t['name'] for t in TOOLS]}",
+                           tool_call_id=call_id, status="error")
+    except ValidationError as exc:
+        return ToolMessage(f"Invalid arguments for {name}: {str(exc)[:2000]}", tool_call_id=call_id, status="error")
+    except (FileNotFoundError, PlanAssemblyError) as exc:
+        return ToolMessage(f"{name}: {exc}", tool_call_id=call_id, status="error")
+    except Exception as exc:  # noqa: BLE001 - a tool bug goes back to the model, not up the stack
+        ctx.emit("error", agent=AGENT, tool=name, summary=f"{name} failed: {type(exc).__name__}: {exc}")
+        return ToolMessage(f"{name} failed: {type(exc).__name__}: {exc}", tool_call_id=call_id, status="error")
 
 
-def start(session: BaselineSession) -> RunResult:
-    """Run the agent until it submits a plan (or fails). Blocks."""
-    t = session.tracer
-    t.emit(
-        "run_start", model=session.handle.model_name, summary=f"Baseline run on {session.bundle_id}",
-        payload={
-            "mode": "baseline", "system_id": SYSTEM_ID, "bundle_id": session.bundle_id,
-            "model": session.handle.model_name, "prompt_version": session.prompt.version,
-            "prompt_drafts": list(session.prompt.drafts),
-            "planning_start": session.planning_start.isoformat() if session.planning_start else None,
-            "budgets": session.config.budgets.model_dump(), "seed": session.config.seed,
-        },
-    )
-    message = build_user_message(session.bundle_id, document_list_text(session.bundle_dir), session.planning_start)
-    result = run_agent(session.handle, message, thread_id=session.run_id)
-    return _after_agent(session, result.output, result.error)
+def _read_document(ctx: RunContext, session: BaselineSession, args: dict) -> list[dict]:
+    """The same content blocks Intake's model gets, only for files in inputs/ (hidden-data rule)."""
+    name = str(args.get("file_name", "")).strip()
+    available = [p.name for p in list_documents(session.inputs_dir)]
+    if name not in available:
+        raise FileNotFoundError(f"{name!r} is not a document of this bundle. Available: {', '.join(available)}")
+    t0 = time.monotonic()
+    blocks = document_content(session.inputs_dir / name)
+    with ctx._lock:
+        ctx.tool_calls += 1
+    ctx.emit("tool_call", agent=AGENT, tool="read_document", item=name,
+             latency_ms=int((time.monotonic() - t0) * 1000), cost_usd=0, summary=f"read_document: {name}",
+             payload={"document": name})
+    return blocks
 
 
-def run_baseline(
-    run_id: str,
-    bundle_dir: Path | str,
-    config: RunConfig,
-    emit: Emit,
-    *,
-    planning_start: date | None = None,
-    run_dir: Path | str | None = None,
-    model: str | BaseChatModel = BASELINE_MODEL,
-) -> tuple[RunResult, BaselineSession]:
-    """Create a session and run it to the first plan. Returns the result and the session (for resume)."""
-    session = create_session(run_id, bundle_dir, config, emit, planning_start=planning_start, run_dir=run_dir, model=model)
-    return start(session), session
+def _rule_check_input(session: BaselineSession, args: dict) -> RuleCheckInput:
+    a = BaselineRuleCheckArgs.model_validate(args)
+    plan = assemble_plan(a.draft, session.tool_outputs, bundle_id=session.bundle_id, system_id="B")
+    material_ready = (session.tool_outputs.get("mrp_tool") or {}).get("material_ready", {})
+    return RuleCheckInput(plan=plan, policy=a.policy, work_centres=a.work_centres, downtime=a.downtime,
+                          material_ready=material_ready, order_lines=a.order_lines, calendar=a.calendar)
+
+
+def _forget(run_id: str) -> None:
+    with _SESSIONS_LOCK:
+        _SESSIONS.pop(run_id, None)
+    close_ctx(run_id)

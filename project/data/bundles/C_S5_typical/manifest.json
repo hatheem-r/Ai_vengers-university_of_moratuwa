@@ -1,0 +1,132 @@
+{
+  "bundle_id": "C_S5_typical",
+  "set": "test",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S5",
+  "scenario_name": "Supplier delay",
+  "mess_level": "typical",
+  "seed": 1015,
+  "n_documents": 12,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5512,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7271,
+      "pages": null
+    },
+    {
+      "name": "customer_po_PRT6408.pdf",
+      "type": "pdf",
+      "size_bytes": 2953,
+      "pages": 1
+    },
+    {
+      "name": "daily_packing_log_2026-11-28.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5466,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2494,
+      "pages": 1
+    },
+    {
+      "name": "godown_summary_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6403,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.csv",
+      "type": "csv",
+      "size_bytes": 313,
+      "pages": null
+    },
+    {
+      "name": "process_sheet.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5482,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_PO-421-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2767,
+      "pages": 1
+    },
+    {
+      "name": "purchase_order_PO-465-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2753,
+      "pages": 1
+    },
+    {
+      "name": "supplier_email_PO-421-26-27.txt",
+      "type": "txt",
+      "size_bytes": 544,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_SI-26-2289.pdf",
+      "type": "pdf",
+      "size_bytes": 3072,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "unit_variant",
+    "notes_column",
+    "mixed_currency"
+  ],
+  "defects_applied": [
+    {
+      "defect": "unit_variant",
+      "document": "godown_summary_tally.xlsx",
+      "detail": {
+        "FLM-INR-100": {
+          "shown_uom": "Roll (500 m)",
+          "base_per_shown": 500
+        },
+        "FLM-INR-200": {
+          "shown_uom": "Roll (500 m)",
+          "base_per_shown": 500
+        }
+      }
+    },
+    {
+      "defect": "notes_column",
+      "document": "godown_summary_tally.xlsx",
+      "detail": "free-text Remarks column"
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_SI-26-2289.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "supplier_delay",
+      "item": "BOX-BOP-200",
+      "po_no": "PO/421/26-27",
+      "old_eta": "2026-12-01",
+      "new_eta": "2026-12-09",
+      "reason": "customs inspection hold on raw material"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-11-30"
+}

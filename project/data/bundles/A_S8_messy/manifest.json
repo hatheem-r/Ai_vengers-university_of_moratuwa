@@ -1,0 +1,132 @@
+{
+  "bundle_id": "A_S8_messy",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S8",
+  "scenario_name": "Combined shock (shortage + breakdown)",
+  "mess_level": "messy",
+  "seed": 1006,
+  "n_documents": 12,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7695,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7179,
+      "pages": null
+    },
+    {
+      "name": "customer_po_450005728.pdf",
+      "type": "pdf",
+      "size_bytes": 3249,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-5893.pdf",
+      "type": "pdf",
+      "size_bytes": 3259,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6903,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5582,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7669,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00593.pdf",
+      "type": "pdf",
+      "size_bytes": 2749,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5490,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7968,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_SI-26-7101.pdf",
+      "type": "pdf",
+      "size_bytes": 2956,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "dmy_dates",
+    "unit_variant",
+    "two_sheets"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "unit_variant",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "BTN-4H-15L": {
+          "shown_uom": "Gross",
+          "base_per_shown": 144
+        },
+        "LBL-MAIN": {
+          "shown_uom": "Thousand",
+          "base_per_shown": 1000
+        }
+      }
+    },
+    {
+      "defect": "two_sheets",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "stock split into one sheet per store/warehouse"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "shortage",
+      "item": "FAB-PIQ-WHT"
+    },
+    {
+      "type": "breakdown",
+      "wc": "LINE-2"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

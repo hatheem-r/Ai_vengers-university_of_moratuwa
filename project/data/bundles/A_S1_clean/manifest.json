@@ -1,0 +1,94 @@
+{
+  "bundle_id": "A_S1_clean",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S1",
+  "scenario_name": "Normal order",
+  "mess_level": "clean",
+  "seed": 1000,
+  "n_documents": 12,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6142,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7258,
+      "pages": null
+    },
+    {
+      "name": "customer_po_450009009.pdf",
+      "type": "pdf",
+      "size_bytes": 3166,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-8504.pdf",
+      "type": "pdf",
+      "size_bytes": 3177,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6578,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5416,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6198,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00941.pdf",
+      "type": "pdf",
+      "size_bytes": 2749,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6570,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_SI-26-1109.pdf",
+      "type": "pdf",
+      "size_bytes": 3076,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [],
+  "defects_applied": [],
+  "planted_conflicts": [],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

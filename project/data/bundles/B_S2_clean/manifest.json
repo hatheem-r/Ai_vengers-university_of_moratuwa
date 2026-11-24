@@ -1,0 +1,93 @@
+{
+  "bundle_id": "B_S2_clean",
+  "set": "test",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S2",
+  "scenario_name": "Rush order",
+  "mess_level": "clean",
+  "seed": 1009,
+  "n_documents": 11,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_sapb1_export.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6066,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7667,
+      "pages": null
+    },
+    {
+      "name": "customer_po_AOI-PO-2026-4330.pdf",
+      "type": "pdf",
+      "size_bytes": 2912,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_MWS5934.pdf",
+      "type": "pdf",
+      "size_bytes": 3005,
+      "pages": 1
+    },
+    {
+      "name": "daily_production_report_2026-11-28.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5217,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2497,
+      "pages": 1
+    },
+    {
+      "name": "inventory_status_report.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6144,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5412,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_681.pdf",
+      "type": "pdf",
+      "size_bytes": 2734,
+      "pages": 1
+    },
+    {
+      "name": "routing_sapb1_stages.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5405,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-8459.pdf",
+      "type": "pdf",
+      "size_bytes": 3058,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [],
+  "defects_applied": [],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "rush_order",
+      "po_no": "MWS5934"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-11-30"
+}

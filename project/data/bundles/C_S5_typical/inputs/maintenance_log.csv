@@ -1,0 +1,2 @@
+Date,Machine ID,Work centre,Machine / part,Breakdown start,Breakdown end,Downtime (h),Category,Reason,Action / remarks,Expected return,Status,Reported by
+20/11/2026,FIL-01,FIL-01,FIL-01 Heat sealer jaw assembly,09:40,14:16,4.6,Breakdown,Electrical fault,"Contactor replaced, tested OK",,Closed,Shift supervisor

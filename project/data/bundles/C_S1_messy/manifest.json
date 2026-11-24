@@ -1,0 +1,109 @@
+{
+  "bundle_id": "C_S1_messy",
+  "set": "test",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S1",
+  "scenario_name": "Normal order",
+  "mess_level": "messy",
+  "seed": 1013,
+  "n_documents": 10,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5508,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7269,
+      "pages": null
+    },
+    {
+      "name": "customer_po_PRT6413.pdf",
+      "type": "pdf",
+      "size_bytes": 2884,
+      "pages": 1
+    },
+    {
+      "name": "daily_packing_log_2026-12-05.jpg",
+      "type": "jpg",
+      "size_bytes": 32122,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2494,
+      "pages": 1
+    },
+    {
+      "name": "godown_summary_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6276,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.csv",
+      "type": "csv",
+      "size_bytes": 301,
+      "pages": null
+    },
+    {
+      "name": "process_sheet.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5478,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_PO-651-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2772,
+      "pages": 1
+    },
+    {
+      "name": "supplier_invoice_SI-26-7394.pdf",
+      "type": "pdf",
+      "size_bytes": 67641,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "blank_noncritical",
+    "mixed_currency",
+    "dmy_dates",
+    "total_row_inside",
+    "scanned_doc"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "scanned_doc",
+      "document": "daily_packing_log_2026-12-05.jpg",
+      "detail": "paper packing log, photographed"
+    },
+    {
+      "defect": "scanned_doc",
+      "document": "supplier_invoice_SI-26-7394.pdf",
+      "detail": "supplier tax invoice is a scanned image"
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_SI-26-7394.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

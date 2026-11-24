@@ -1,0 +1,136 @@
+{
+  "bundle_id": "A_S3_typical",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S3",
+  "scenario_name": "Material shortage",
+  "mess_level": "typical",
+  "seed": 1002,
+  "n_documents": 11,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6142,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7159,
+      "pages": null
+    },
+    {
+      "name": "customer_po_450001456.pdf",
+      "type": "pdf",
+      "size_bytes": 3254,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-12-12.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6639,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5414,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6198,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00706.pdf",
+      "type": "pdf",
+      "size_bytes": 2747,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6715,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-1531.pdf",
+      "type": "pdf",
+      "size_bytes": 3054,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "unit_variant",
+    "dmy_dates",
+    "blank_noncritical",
+    "notes_column"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "unit_variant",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "BTN-4H-15L": {
+          "shown_uom": "Gross",
+          "base_per_shown": 144
+        },
+        "LBL-MAIN": {
+          "shown_uom": "Thousand",
+          "base_per_shown": 1000
+        }
+      }
+    },
+    {
+      "defect": "notes_column",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "free-text Remarks column"
+    },
+    {
+      "defect": "blank_noncritical",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "row": 2,
+        "column": "Location"
+      }
+    },
+    {
+      "defect": "notes_column",
+      "document": "hourly_production_report_2026-12-12.xlsx",
+      "detail": "free-text Remarks column"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "shortage",
+      "item": "FAB-PIQ-NVY"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-14"
+}

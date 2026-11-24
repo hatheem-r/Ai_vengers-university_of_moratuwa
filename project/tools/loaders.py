@@ -1,457 +1,180 @@
-"""Document loading and the ``read_document`` tool.
+"""read_document: turns one input file into tables, text and page images for an LLM.
 
-Turns one file from a bundle's ``inputs/`` folder into content the model can
-read:
+    from tools.loaders import read_document, list_documents
+    doc = read_document("data/bundles/dev_A_S1_clean/inputs/bom_techpack.xlsx")
+    doc.sheets["BoM"]            # pandas DataFrame per sheet (XLSX/CSV), raw cells, no header guessing
+    doc.text                     # the whole file as text (sheets as tab-separated rows r1, r2, ...)
+    doc.pages[0].image_jpeg      # PDF page image (JPEG bytes), see `images` below
+    doc.content_blocks()         # Anthropic message content: one text block + image blocks
 
-* XLSX / CSV: loaded with pandas and rendered as a text grid. Every row keeps
-  its real spreadsheet row number and column letter, so flags can cite
-  ``SourceRef.row`` exactly. Messy layouts (title rows, blank rows, notes) are
-  kept as they are; nothing is guessed.
-* PDF: text per page (pdfplumber). Pages with little or no text (scans) are
-  also sent as page images, so the model can read them. ``page_images=True``
-  sends images for every requested page.
-* TXT: text with line numbers.
-* PNG / JPG: the image itself.
+Formats
+- .xlsx/.xlsm: every sheet with pandas (openpyxl engine), header=None so the model sees
+  title rows and the real header row as printed. Dates become ISO dates.
+- .csv: one sheet called "csv".
+- .pdf: text per page with pdfplumber, plus page images. `images="auto"` (default)
+  renders only pages whose text layer is thin (scans); "all" renders every page; "none"
+  renders nothing.
+- .png/.jpg: the image itself; .txt/.eml/.md/.json: the text.
 
-The same code serves both systems: the baseline calls the ``read_document``
-tool, and the multi-agent Intake can call :func:`load_document` and
-:meth:`LoadedDocument.content_blocks` directly.
-
-Hidden-data rule (TASKS.md §0.3): only files inside ``inputs/`` can be read.
-``state.json``, ``manifest.json`` and ``answer_key.json`` are never readable.
+The baseline agent calls this as its `read_document` tool. Systems may only read files in
+a bundle's inputs/ folder (TASKS.md 0.3, hidden-data rule): `read_input` enforces that.
 """
-
 from __future__ import annotations
 
 import base64
+import datetime as dt
 import io
-import math
 from dataclasses import dataclass, field
-from datetime import date, datetime, time
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal, Optional, Union
 
-from langchain_core.tools import StructuredTool, ToolException
-from pydantic import BaseModel, Field
+import pandas as pd
 
-from project.tools.common import validation_error_message
+TABLE_SUFFIXES = {".xlsx", ".xlsm", ".csv"}
+TEXT_SUFFIXES = {".txt", ".eml", ".md", ".json"}
+IMAGE_SUFFIXES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+SUPPORTED_SUFFIXES = TABLE_SUFFIXES | TEXT_SUFFIXES | set(IMAGE_SUFFIXES) | {".pdf"}
+SCAN_TEXT_THRESHOLD = 40       # fewer text characters on a page than this = treat it as a scan
+PAGE_DPI = 110                 # ~ 900 x 1300 px for A4: readable, about 1.5k image tokens
+JPEG_QUALITY = 80              # ~ 70 KB per page (PNG would be ~ 370 KB)
+MAX_ROWS_PER_SHEET = 500
+MAX_TEXT_CHARS = 60_000
 
-SUPPORTED_TYPES: dict[str, str] = {
-    ".pdf": "pdf",
-    ".xlsx": "xlsx",
-    ".xlsm": "xlsx",
-    ".xls": "xls",
-    ".csv": "csv",
-    ".txt": "txt",
-    ".png": "png",
-    ".jpg": "jpg",
-    ".jpeg": "jpg",
-}
-HIDDEN_FILES = {"state.json", "manifest.json", "answer_key.json"}
-
-# A PDF page with fewer extracted characters than this is treated as a scan.
-SCAN_TEXT_THRESHOLD = 40
-PAGE_IMAGE_DPI = 150
-# Anthropic recommends images no larger than ~1568 px on the long side.
-MAX_IMAGE_SIDE = 1568
-MAX_PAGES_PER_CALL = 20
-MAX_SHEET_ROWS = 2_000
-MAX_CELL_CHARS = 200
-
-ImageMode = Literal["auto", "always", "never"]
-
-
-class DocumentError(ToolException):
-    """A document could not be found, is not allowed, or could not be read."""
-
-
-# ---------------------------------------------------------------------------
-# Data classes
-# ---------------------------------------------------------------------------
+ImageMode = Literal["auto", "all", "none"]
 
 
 @dataclass
-class PageContent:
-    page: int  # 1-based
+class PdfPage:
+    number: int                       # 1-based
     text: str
-    image_png: bytes | None = None
-
-
-@dataclass
-class SheetContent:
-    name: str
-    # (spreadsheet row number, cells) for non-empty rows only; cells index 0 = column A
-    rows: list[tuple[int, list[str]]]
-    n_rows_total: int
-    n_cols: int
-    truncated: bool = False
+    looks_scanned: bool
+    image_jpeg: Optional[bytes] = None
 
 
 @dataclass
 class LoadedDocument:
     name: str
-    type: str
-    size_bytes: int
-    pages: list[PageContent] = field(default_factory=list)
-    n_pages: int | None = None
-    sheets: list[SheetContent] = field(default_factory=list)
-    text: str | None = None
-    image: tuple[bytes, str] | None = None  # (data, mime type)
-    notes: list[str] = field(default_factory=list)
+    path: Path
+    kind: Literal["table", "pdf", "image", "text"]
+    text: str
+    sheets: dict[str, pd.DataFrame] = field(default_factory=dict)
+    pages: list[PdfPage] = field(default_factory=list)
+    image: Optional[tuple[str, bytes]] = None          # (media type, bytes) for image files
 
-    def to_text(self) -> str:
-        """Everything except images, as one text block."""
-        out = [f"=== Document: {self.name} (type: {self.type}) ==="]
-        out += [f"Note: {n}" for n in self.notes]
-        for sheet in self.sheets:
-            out.append(_render_sheet(sheet))
-        for p in self.pages:
-            body = p.text.strip()
-            label = f"--- Page {p.page} of {self.n_pages} ---"
-            if not body:
-                body = "(no text layer on this page; see the page image)" if p.image_png else "(no text on this page)"
-            elif p.image_png:
-                label += " (page image attached; text below may be incomplete)"
-            out += [label, body]
-        if self.text is not None:
-            out.append(self.text)
-        if self.image is not None:
-            out.append("(image file; see the attached image)")
-        return "\n".join(out)
+    @property
+    def looks_scanned(self) -> bool:
+        return any(p.looks_scanned for p in self.pages)
 
-    def content_blocks(self) -> list[dict[str, Any]]:
-        """LangChain standard content blocks: one text block, then any images."""
-        blocks: list[dict[str, Any]] = [{"type": "text", "text": self.to_text()}]
-        for p in self.pages:
-            if p.image_png:
-                blocks.append({"type": "text", "text": f"Image of page {p.page} of {self.name}:"})
-                blocks.append(_image_block(p.image_png, "image/png"))
-        if self.image is not None:
-            blocks.append(_image_block(*self.image))
+    def images(self) -> list[tuple[str, bytes]]:
+        out = [("image/jpeg", p.image_jpeg) for p in self.pages if p.image_jpeg]
+        return out + ([self.image] if self.image else [])
+
+    def content_blocks(self) -> list[dict]:
+        """Anthropic content blocks: images first, then the text (with the file name)."""
+        blocks = [{"type": "image", "source": {"type": "base64", "media_type": mt,
+                                               "data": base64.b64encode(data).decode()}}
+                  for mt, data in self.images()]
+        text = self.text
+        if self.looks_scanned:
+            text += "\n\n(Some pages have little or no text layer: read the attached page images.)"
+        blocks.append({"type": "text", "text": f"File: {self.name}\n\n{text}"})
         return blocks
 
 
-def _image_block(data: bytes, mime: str) -> dict[str, Any]:
-    return {"type": "image", "base64": base64.b64encode(data).decode("ascii"), "mime_type": mime}
+def list_documents(inputs_dir: Union[str, Path]) -> list[Path]:
+    """Readable files in a bundle's inputs/ folder, in a stable order (hidden files skipped)."""
+    return sorted(p for p in Path(inputs_dir).iterdir()
+                  if p.is_file() and not p.name.startswith(".") and p.suffix.lower() in SUPPORTED_SUFFIXES)
 
 
-# ---------------------------------------------------------------------------
-# Bundle access
-# ---------------------------------------------------------------------------
+def read_input(inputs_dir: Union[str, Path], name: str, images: ImageMode = "auto") -> LoadedDocument:
+    """read_document for a file name the model gave, refusing anything outside inputs_dir."""
+    root = Path(inputs_dir).resolve()
+    path = (root / name).resolve()
+    if root not in path.parents or not path.is_file():
+        available = ", ".join(p.name for p in list_documents(root))
+        raise FileNotFoundError(f"{name!r} is not a file in inputs/. Available: {available}")
+    return read_document(path, images=images)
 
 
-def inputs_dir(bundle_dir: Path | str) -> Path:
-    """``<bundle>/inputs`` if it exists, otherwise the folder itself."""
-    bundle_dir = Path(bundle_dir)
-    sub = bundle_dir / "inputs"
-    return sub if sub.is_dir() else bundle_dir
-
-
-def document_type(path: Path | str) -> str | None:
-    return SUPPORTED_TYPES.get(Path(path).suffix.lower())
-
-
-def list_documents(bundle_dir: Path | str) -> list[dict[str, Any]]:
-    """The readable documents in a bundle: ``[{name, type, size_bytes}]``, sorted by name."""
-    folder = inputs_dir(bundle_dir)
-    docs = []
-    for p in sorted(folder.iterdir(), key=lambda p: p.name.lower()):
-        if p.is_file() and p.name not in HIDDEN_FILES and not p.name.startswith(".") and document_type(p):
-            docs.append({"name": p.name, "type": document_type(p), "size_bytes": p.stat().st_size})
-    return docs
-
-
-def resolve_document(bundle_dir: Path | str, file_name: str) -> Path:
-    """Path of ``file_name`` inside the bundle's inputs, refusing anything outside it."""
-    folder = inputs_dir(bundle_dir).resolve()
-    name = file_name.strip()
-    if not name or name != Path(name).name or name in (".", ".."):
-        raise DocumentError(f"'{file_name}' is not a plain file name. Use a name from the document list.")
-    if name in HIDDEN_FILES:
-        raise DocumentError(f"'{name}' is not part of the input documents.")
-    path = (folder / name).resolve()
-    if path.parent != folder or not path.is_file():
-        available = ", ".join(d["name"] for d in list_documents(bundle_dir)) or "(none)"
-        raise DocumentError(f"No document named '{name}'. Available: {available}")
-    if document_type(path) is None:
-        raise DocumentError(f"'{name}' has an unsupported file type ({path.suffix}).")
-    return path
-
-
-# ---------------------------------------------------------------------------
-# Loading
-# ---------------------------------------------------------------------------
-
-
-def load_document(
-    path: Path | str,
-    *,
-    pages: list[int] | None = None,
-    images: ImageMode = "auto",
-) -> LoadedDocument:
-    """Load one document.
-
-    Args:
-        path: The file.
-        pages: 1-based PDF pages to load (default: all, up to MAX_PAGES_PER_CALL).
-        images: PDF page images: ``auto`` (only pages that look scanned),
-            ``always`` or ``never``.
-    """
+def read_document(path: Union[str, Path], images: ImageMode = "auto") -> LoadedDocument:
     path = Path(path)
-    kind = document_type(path)
-    if kind is None:
-        raise DocumentError(f"Unsupported file type: {path.suffix}")
-    doc = LoadedDocument(name=path.name, type=kind, size_bytes=path.stat().st_size)
-    try:
-        if kind == "pdf":
-            _load_pdf(path, doc, pages, images)
-        elif kind in ("xlsx", "xls"):
-            _load_excel(path, doc)
-        elif kind == "csv":
-            _load_csv(path, doc)
-        elif kind == "txt":
-            text = _read_text(path)
-            doc.text = "\n".join(f"{i:>4}: {line}" for i, line in enumerate(text.splitlines(), 1))
-        else:
-            doc.image = (_fit_image(path.read_bytes()), "image/png")
-    except DocumentError:
-        raise
-    except Exception as exc:  # noqa: BLE001 - report any parse failure to the model
-        raise DocumentError(f"Could not read '{path.name}': {type(exc).__name__}: {exc}") from exc
-    return doc
+    suffix = path.suffix.lower()
+    if suffix not in SUPPORTED_SUFFIXES:
+        raise ValueError(f"unsupported file type {suffix!r} ({path.name})")
+    if suffix in TABLE_SUFFIXES:
+        sheets = _read_tables(path)
+        return LoadedDocument(path.name, path, "table", _cut(_sheets_text(sheets)), sheets=sheets)
+    if suffix == ".pdf":
+        pages = _read_pdf(path, images)
+        text = "\n\n".join(f"### Page {p.number}\n{p.text}" for p in pages)
+        return LoadedDocument(path.name, path, "pdf", _cut(text), pages=pages)
+    if suffix in IMAGE_SUFFIXES:
+        return LoadedDocument(path.name, path, "image", "(Image document: read the attached image.)",
+                              image=(IMAGE_SUFFIXES[suffix], path.read_bytes()))
+    return LoadedDocument(path.name, path, "text", _cut(path.read_text(encoding="utf-8", errors="replace")))
 
 
-def _load_pdf(path: Path, doc: LoadedDocument, pages: list[int] | None, images: ImageMode) -> None:
-    import pdfplumber
+# --- tables ---------------------------------------------------------------------------------
 
-    with pdfplumber.open(path) as pdf:
-        n = len(pdf.pages)
-        doc.n_pages = n
-        wanted = pages or list(range(1, n + 1))
-        bad = [p for p in wanted if not 1 <= p <= n]
-        if bad:
-            raise DocumentError(f"'{path.name}' has {n} pages; page(s) {bad} do not exist.")
-        if len(wanted) > MAX_PAGES_PER_CALL:
-            doc.notes.append(
-                f"Showing pages {wanted[0]}-{wanted[MAX_PAGES_PER_CALL - 1]} of {n}. "
-                "Call read_document again with `pages` for the rest."
-            )
-            wanted = wanted[:MAX_PAGES_PER_CALL]
-        for number in wanted:
-            page = pdf.pages[number - 1]
-            text = page.extract_text() or ""
-            looks_scanned = len(text.strip()) < SCAN_TEXT_THRESHOLD
-            image = None
-            if images == "always" or (images == "auto" and looks_scanned):
-                rendered = page.to_image(resolution=PAGE_IMAGE_DPI).original
-                image = _fit_image(rendered)
-            doc.pages.append(PageContent(page=number, text=text, image_png=image))
-
-
-def _load_excel(path: Path, doc: LoadedDocument) -> None:
-    import pandas as pd
-
-    engine = None if doc.type == "xlsx" else "xlrd"
-    try:
-        frames = pd.read_excel(path, sheet_name=None, header=None, dtype=object, engine=engine)
-    except ImportError as exc:
-        raise DocumentError(f"Cannot read legacy .xls files here ({exc}). Ask for an .xlsx copy.") from exc
+def _read_tables(path: Path) -> dict[str, pd.DataFrame]:
+    if path.suffix.lower() == ".csv":
+        frames = {"csv": pd.read_csv(path, header=None, dtype=object, encoding="utf-8-sig",
+                                     skip_blank_lines=True, keep_default_na=False)}
+    else:
+        frames = pd.read_excel(path, sheet_name=None, header=None, dtype=object, engine="openpyxl")
+    out = {}
     for name, df in frames.items():
-        doc.sheets.append(_sheet_from_frame(str(name), df, first_row=1))
-    doc.notes.append("Cells show stored values; formulas without a saved result appear empty.")
+        df = df.replace({"": None}).dropna(how="all").dropna(axis=1, how="all")
+        out[str(name)] = df.reset_index(drop=True)
+    return out
 
 
-def _load_csv(path: Path, doc: LoadedDocument) -> None:
-    # The csv module rather than pandas: messy exports often have rows of
-    # different lengths, which pandas rejects, and reader.line_num gives the
-    # exact line number of every row.
-    import csv
-
-    text = _read_text(path)
-    try:
-        delimiter = csv.Sniffer().sniff(text[:8192], delimiters=CSV_DELIMITERS).delimiter
-    except csv.Error:
-        delimiter = _guess_delimiter(text)  # the sniffer gives up on ragged rows
-    reader = csv.reader(io.StringIO(text), delimiter=delimiter)
-    rows: list[tuple[int, list[str]]] = []
-    n_cols = 0
-    line_start = 1
-    for record in reader:
-        cells = [_cell(v) for v in record]
-        while cells and cells[-1] == "":
-            cells.pop()
-        if cells:
-            rows.append((line_start, cells))
-            n_cols = max(n_cols, len(cells))
-        line_start = reader.line_num + 1
-    doc.sheets.append(SheetContent(
-        name=path.name, rows=rows[:MAX_SHEET_ROWS], n_rows_total=reader.line_num,
-        n_cols=n_cols, truncated=len(rows) > MAX_SHEET_ROWS,
-    ))
-
-
-CSV_DELIMITERS = ",;\t|"
-
-
-def _guess_delimiter(text: str) -> str:
-    """The candidate found on the most of the first 20 non-empty lines (ties: most often)."""
-    lines = [ln for ln in text.splitlines() if ln.strip()][:20]
-    best, best_key = ",", (0, 0)
-    for d in CSV_DELIMITERS:
-        key = (sum(d in ln for ln in lines), sum(ln.count(d) for ln in lines))
-        if key > best_key:
-            best, best_key = d, key
-    return best
-
-
-def _sheet_from_frame(name: str, df: Any, first_row: int) -> SheetContent:
-    rows: list[tuple[int, list[str]]] = []
-    n_cols = 0
-    for i, values in enumerate(df.itertuples(index=False, name=None)):
-        cells = [_cell(v) for v in values]
-        while cells and cells[-1] == "":
-            cells.pop()
-        if cells:
-            rows.append((first_row + i, cells))
-            n_cols = max(n_cols, len(cells))
-    truncated = len(rows) > MAX_SHEET_ROWS
-    return SheetContent(name=name, rows=rows[:MAX_SHEET_ROWS], n_rows_total=len(df), n_cols=n_cols, truncated=truncated)
-
-
-def _cell(v: Any) -> str:
-    if v is None:
+def _cell(v) -> str:
+    if v is None or (isinstance(v, float) and pd.isna(v)) or v is pd.NaT:
         return ""
-    if isinstance(v, float):
-        if math.isnan(v):
-            return ""
-        if v.is_integer() and abs(v) < 1e15:
-            return str(int(v))
-        return repr(v)
-    if isinstance(v, datetime):
-        return v.date().isoformat() if v.time() == time(0) else v.isoformat(sep=" ")
-    if isinstance(v, date):
+    if isinstance(v, (pd.Timestamp, dt.datetime)):
+        return v.date().isoformat() if v.time() == dt.time(0) else v.isoformat(sep=" ")
+    if isinstance(v, dt.date):
         return v.isoformat()
-    try:
-        import pandas as pd
-
-        if v is pd.NaT:
-            return ""
-    except ImportError:  # pragma: no cover
-        pass
-    s = str(v).replace("\r", " ").replace("\n", " ").replace("|", "/").strip()
-    return s if len(s) <= MAX_CELL_CHARS else s[:MAX_CELL_CHARS] + "..."
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    return str(v).replace("\t", " ").replace("\n", " ")
 
 
-def column_letter(index: int) -> str:
-    """0 -> A, 25 -> Z, 26 -> AA."""
-    letters = ""
-    index += 1
-    while index:
-        index, rem = divmod(index - 1, 26)
-        letters = chr(65 + rem) + letters
-    return letters
+def _sheets_text(sheets: dict[str, pd.DataFrame]) -> str:
+    parts = []
+    for name, df in sheets.items():
+        rows = []
+        for i, row in enumerate(df.itertuples(index=False), 1):
+            if i > MAX_ROWS_PER_SHEET:
+                rows.append(f"... ({len(df) - MAX_ROWS_PER_SHEET} more rows cut)")
+                break
+            cells = [_cell(v) for v in row]
+            while cells and cells[-1] == "":
+                cells.pop()
+            rows.append(f"r{i}\t" + "\t".join(cells))
+        parts.append(f"### Sheet: {name}\n" + "\n".join(rows))
+    return "\n\n".join(parts)
 
 
-def _render_sheet(sheet: SheetContent) -> str:
-    header = f'--- Sheet "{sheet.name}": {len(sheet.rows)} non-empty rows'
-    if sheet.n_cols:
-        header += f", columns A-{column_letter(sheet.n_cols - 1)}"
-    header += " (blank rows omitted; row numbers are the real spreadsheet rows) ---"
-    if not sheet.rows:
-        return header + "\n(empty sheet)"
-    lines = [header, "row | " + " | ".join(column_letter(i) for i in range(sheet.n_cols))]
-    for number, cells in sheet.rows:
-        lines.append(f"{number} | " + " | ".join(cells))
-    if sheet.truncated:
-        lines.append(f"(truncated after {MAX_SHEET_ROWS} non-empty rows)")
-    return "\n".join(lines)
+# --- PDFs ----------------------------------------------------------------------------------
+
+def _read_pdf(path: Path, images: ImageMode) -> list[PdfPage]:
+    import pdfplumber
+    pages = []
+    with pdfplumber.open(path) as pdf:
+        for i, page in enumerate(pdf.pages, 1):
+            text = page.extract_text() or ""
+            scanned = len(text.strip()) < SCAN_TEXT_THRESHOLD
+            jpg = None
+            if images == "all" or (images == "auto" and scanned):
+                buf = io.BytesIO()
+                page.to_image(resolution=PAGE_DPI).original.convert("RGB").save(buf, format="JPEG", quality=JPEG_QUALITY)
+                jpg = buf.getvalue()
+            pages.append(PdfPage(i, text, scanned, jpg))
+    return pages
 
 
-def _read_text(path: Path) -> str:
-    raw = path.read_bytes()
-    for enc in ("utf-8-sig", "cp1252"):
-        try:
-            return raw.decode(enc)
-        except UnicodeDecodeError:
-            continue
-    return raw.decode("latin-1")
-
-
-def _fit_image(source: bytes | Any) -> bytes:
-    """PNG bytes, scaled down so the long side is at most MAX_IMAGE_SIDE."""
-    from PIL import Image
-
-    img = Image.open(io.BytesIO(source)) if isinstance(source, (bytes, bytearray)) else source
-    if img.mode not in ("RGB", "L"):
-        img = img.convert("RGB")
-    longest = max(img.size)
-    if longest > MAX_IMAGE_SIDE:
-        scale = MAX_IMAGE_SIDE / longest
-        img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
-    return buf.getvalue()
-
-
-def parse_pages(spec: str | None) -> list[int] | None:
-    """``"1-3,5"`` -> ``[1, 2, 3, 5]``. Empty or None -> None (all pages)."""
-    if spec is None or not str(spec).strip():
-        return None
-    pages: list[int] = []
-    try:
-        for part in str(spec).replace(" ", "").split(","):
-            if "-" in part:
-                a, b = part.split("-", 1)
-                pages.extend(range(int(a), int(b) + 1))
-            elif part:
-                pages.append(int(part))
-    except ValueError as exc:
-        raise DocumentError(f"Bad page list '{spec}'. Use a form like '1-3,5'.") from exc
-    return sorted(set(pages))
-
-
-# ---------------------------------------------------------------------------
-# The tool
-# ---------------------------------------------------------------------------
-
-READ_DOCUMENT_DESCRIPTION = (
-    "Read one input document from the bundle by its file name. "
-    "Spreadsheets (XLSX/CSV) come back as a grid with the real row numbers and column letters; "
-    "cite those row numbers in flag sources. PDFs come back as text per page, plus page images "
-    "for scanned pages. Text files come back with line numbers, and image files as images. "
-    "Use `pages` (e.g. '1-3,5') to read part of a long PDF, and `page_images=true` to get images "
-    "of every requested page when the text looks wrong or incomplete."
-)
-
-
-class ReadDocumentInput(BaseModel):
-    file_name: str = Field(description="Exact file name from the bundle's document list, e.g. 'stock_report.xlsx'.")
-    pages: str | None = Field(default=None, description="PDF only: pages to read, e.g. '1-3,5'. Default: all.")
-    page_images: bool = Field(default=False, description="PDF only: attach an image of every requested page.")
-
-
-def make_read_document_tool(bundle_dir: Path | str) -> StructuredTool:
-    """The ``read_document`` tool, bound to one bundle."""
-
-    def read_document(file_name: str, pages: str | None = None, page_images: bool = False) -> list[dict[str, Any]]:
-        path = resolve_document(bundle_dir, file_name)
-        doc = load_document(path, pages=parse_pages(pages), images="always" if page_images else "auto")
-        return doc.content_blocks()
-
-    return StructuredTool.from_function(
-        func=read_document,
-        name="read_document",
-        description=READ_DOCUMENT_DESCRIPTION,
-        args_schema=ReadDocumentInput,
-        response_format="content",
-        handle_tool_error=True,
-        handle_validation_error=validation_error_message,
-    )
-
-
-def document_list_text(bundle_dir: Path | str) -> str:
-    """A short list of the bundle's documents, for a prompt."""
-    docs = list_documents(bundle_dir)
-    if not docs:
-        return "(no documents)"
-    return "\n".join(f"- {d['name']} ({d['type']}, {d['size_bytes'] // 1024 or 1} KB)" for d in docs)
+def _cut(text: str) -> str:
+    return text if len(text) <= MAX_TEXT_CHARS else text[:MAX_TEXT_CHARS] + "\n... (cut)"
