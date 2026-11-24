@@ -205,7 +205,7 @@ def test_random_instances_have_no_violations(seed):
     assert r.status in ("optimal", "feasible"), r.infeasible_reasons
     assert r.violations == []
     assert check_schedule(r, inp) == []
-    assert r.solver["wall_time_s"] <= 11
+    assert r.solver["wall_time_s"] <= 10.5  # whole call, including model building
     assert len(r.work_orders) == len(work_orders)
 
 

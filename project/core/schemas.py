@@ -448,3 +448,107 @@ class ScheduleResult(_Model):
     violations: list[str] = Field(description="Independent re-check of the schedule; always empty unless there is a bug")
     issues: list[str]
     solver: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# Tool contracts: rule_check (Shazan)
+# ---------------------------------------------------------------------------
+# Every fact may carry the SourceRef it was read from, so a violation can name
+# the documents involved (a flag only scores if it cites the right document).
+
+
+class CustomerOrderLine(_Model):
+    customer_po: str
+    item_code: str | None = None
+    qty: float | None = None
+    uom: str | None = None
+    due_date: date | None = None
+    source: SourceRef | None = None
+
+
+class PurchaseOrderLine(_Model):
+    po_number: str
+    item_code: str
+    qty: float | None = None
+    uom: str | None = None
+    unit_price: float | None = None
+    supplier_id: str | None = None
+    expected_date: date | None = None
+    source: SourceRef | None = None
+
+
+class InvoiceLine(_Model):
+    invoice_number: str
+    po_number: str | None = None
+    item_code: str
+    qty: float
+    uom: str | None = None
+    unit_price: float | None = None
+    supplier_id: str | None = None
+    source: SourceRef | None = None
+
+
+class ReceiptLine(_Model):
+    """Goods received (GRN or delivery note)."""
+
+    po_number: str
+    item_code: str
+    qty: float
+    uom: str | None = None
+    source: SourceRef | None = None
+
+
+class CertificateRequirement(_Model):
+    certificate_type: str
+    item_code: str | None = Field(default=None, description="Item (material or product) that needs the certificate")
+    customer_po: str | None = Field(default=None, description="Or: every product on this customer order needs it")
+    source: SourceRef | None = None
+
+
+class Certificate(_Model):
+    certificate_type: str
+    item_code: str | None = None
+    supplier_id: str | None = None
+    valid_until: date | None = None
+    source: SourceRef | None = None
+
+
+class RulePolicy(_Model):
+    max_overtime_hours_per_day: float | None = Field(default=None, ge=0, description="Per machine")
+    max_overtime_hours_per_week: float | None = Field(default=None, ge=0, description="Per machine, Monday-Sunday")
+    allow_non_working_days: bool = Field(default=False, description="May work be planned on non-working days?")
+    qty_tolerance_pct: float = Field(default=0, ge=0)
+    price_tolerance_pct: float = Field(default=0, ge=0)
+
+
+class RuleCheckInput(_Model):
+    plan: WorkOrderPlan
+    customer_orders: list[CustomerOrderLine] = Field(default_factory=list)
+    purchase_orders: list[PurchaseOrderLine] = Field(default_factory=list)
+    invoices: list[InvoiceLine] = Field(default_factory=list)
+    receipts: list[ReceiptLine] = Field(default_factory=list)
+    certificate_requirements: list[CertificateRequirement] = Field(default_factory=list)
+    certificates: list[Certificate] = Field(default_factory=list)
+    machines: list[str] = Field(default_factory=list, description="Known machine ids")
+    downtime: list[DowntimeWindow] = Field(default_factory=list)
+    calendar: CalendarSpec | None = None
+    material_ready: dict[str, date] = Field(default_factory=dict, description="wo_id -> date all materials are available")
+    policy: RulePolicy = Field(default_factory=RulePolicy)
+
+
+class RuleViolation(_Model):
+    rule: str
+    flag_type: FlagType
+    severity: Severity
+    message: str
+    wo_id: str | None = None
+    sources: list[SourceRef] = Field(default_factory=list)
+    needs_human: bool
+    already_flagged: bool = Field(description="The plan already has a flag of this type for the same order or document")
+
+
+class RuleCheckResult(_Model):
+    passed: bool = Field(description="True when no high-severity violation is left unflagged")
+    violations: list[RuleViolation]
+    rules_run: list[str]
+    rules_skipped: list[str]

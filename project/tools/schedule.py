@@ -52,6 +52,9 @@ from project.core.tracing import SL_TZ
 from project.tools.common import validation_error_message
 
 NUM_WORKERS = 8
+# CP-SAT can overrun its limit a little (and model building takes time), so the solver
+# gets the time left minus this margin; the whole tool call stays within time_limit_s.
+SOLVER_MARGIN_S = 1.0
 RANDOM_SEED = 0
 
 
@@ -308,6 +311,7 @@ def run_schedule(inp: ScheduleInput | dict[str, Any]) -> ScheduleResult:
 
     if not isinstance(inp, ScheduleInput):
         inp = ScheduleInput.model_validate(inp)
+    t_begin = _time.perf_counter()
     prob = _Problem(inp)
     if prob.reasons:
         return _empty(prob, "infeasible", {"status": "NOT_SOLVED", "reason": "input check failed"})
@@ -355,12 +359,14 @@ def run_schedule(inp: ScheduleInput | dict[str, Any]) -> ScheduleResult:
     model.minimize(sum(tard_terms) * big + sum(finish_terms))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = inp.time_limit_s
+    remaining = inp.time_limit_s - (_time.perf_counter() - t_begin) - SOLVER_MARGIN_S
+    solver.parameters.max_time_in_seconds = max(0.5, remaining)
     solver.parameters.num_workers = NUM_WORKERS
     solver.parameters.random_seed = RANDOM_SEED
     t0 = _time.perf_counter()
     status = solver.solve(model)
-    info = {"status": solver.status_name(status), "wall_time_s": round(_time.perf_counter() - t0, 3),
+    info = {"status": solver.status_name(status), "solve_time_s": round(_time.perf_counter() - t0, 3),
+            "wall_time_s": round(_time.perf_counter() - t_begin, 3),
             "time_limit_s": inp.time_limit_s}
     if status == cp_model.MODEL_INVALID:
         raise ToolException(f"Internal error: invalid scheduling model ({model.validate()}).")
