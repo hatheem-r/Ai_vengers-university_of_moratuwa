@@ -128,6 +128,8 @@ class CheckerReview(_Model):
 
 
 class WorkOrderPlan(_Model):
+    """The complete production work order plan. Submit it once, at the end, with every field filled."""
+
     schema_version: str = SCHEMA_VERSION
     bundle_id: str
     system_id: SystemId

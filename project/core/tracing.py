@@ -34,6 +34,13 @@ def now() -> datetime:
     return datetime.now(SL_TZ)
 
 
+def new_run_id() -> str:
+    """``run_20261123_093000_a1b2`` (API.md §1)."""
+    import secrets
+
+    return f"run_{now():%Y%m%d_%H%M%S}_{secrets.token_hex(2)}"
+
+
 # ---------------------------------------------------------------------------
 # Price table (USD per million tokens, Anthropic first-party list prices)
 # ---------------------------------------------------------------------------

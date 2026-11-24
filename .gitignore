@@ -22,3 +22,6 @@ venv/
 # Run outputs
 logs/
 traces/
+
+# Run folders (never commit; TASKS.md §0.4)
+runs/

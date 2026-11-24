@@ -437,15 +437,17 @@ def run_agent(
         err = error_from_exception(exc)
         tracer.emit("error", agent=handle.name, item=handle.item, summary=f"{err.code}: {err.message}",
                     payload={"code": err.code, "message": err.message})
+        # Duration goes in the payload, not latency_ms: per-call latencies are summed from
+        # llm_call / tool_call events, and an agent-level total there would be counted twice.
         tracer.emit("agent_end", agent=handle.name, item=handle.item,
-                    latency_ms=int((time.perf_counter() - t0) * 1000),
                     summary=f"{handle.name} failed ({err.code})",
-                    payload={"status": "failed", "schema_repairs": handle.repair.used})
+                    payload={"status": "failed", "schema_repairs": handle.repair.used,
+                             "duration_ms": int((time.perf_counter() - t0) * 1000)})
         return AgentRunResult(output=None, messages=list(messages), error=err)
 
     output = state.get("structured_response")
     tracer.emit("agent_end", agent=handle.name, item=handle.item,
-                latency_ms=int((time.perf_counter() - t0) * 1000),
                 summary=f"{handle.name} done" + (f", {handle.repair.used} repair retry" if handle.repair.used else ""),
-                payload={"status": "done", "schema_repairs": handle.repair.used})
+                payload={"status": "done", "schema_repairs": handle.repair.used,
+                         "duration_ms": int((time.perf_counter() - t0) * 1000)})
     return AgentRunResult(output=output, messages=state.get("messages", []))
