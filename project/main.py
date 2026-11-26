@@ -39,7 +39,10 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.fake:
-        from multi_agent import fakes
+        if args.mode == "baseline":
+            from baseline import fakes
+        else:
+            from multi_agent import fakes
         fakes.install(extraction_key=json.loads((args.bundle / "extraction_key.json").read_text()))
     elif not os.getenv("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key, or use --fake.",

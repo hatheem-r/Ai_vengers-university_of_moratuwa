@@ -32,3 +32,6 @@ frontend/.vite/
 # Run folders (trace.jsonl, plan.json)
 runs/
 project/runs/
+
+# macOS zip leftovers
+__MACOSX/

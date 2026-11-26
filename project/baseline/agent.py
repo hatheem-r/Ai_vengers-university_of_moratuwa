@@ -1,18 +1,27 @@
-"""Single-agent baseline (system B): one Sonnet 5.5 ReAct agent, same harness and tools.
+"""Single-agent baseline (system B), the runner backend for mode="baseline".
 
-Fairness (TASKS.md §0.1): this agent uses the same harness (core/harness.py: budgets,
-retries, prompt caching, schema repair, trace events), the same tool implementations and
-descriptions (multi_agent/tools.py registry, tools/loaders.read_input), the same final
-answer and plan assembly (multi_agent/planner.PlannerDraft + assemble_plan) and the same
-WorkOrderPlan output as the multi-agent system. Its prompt is built from the multi-agent
-prompt files, so the prompt freeze carries over.
+One Sonnet 5.5 agent reads the documents, plans and checks in one conversation. Everything
+except the architecture is shared with the multi-agent system, so the comparison is fair:
 
-What differs, on purpose: one agent ("agent" in traces) reads the raw documents itself with
-`read_document`, and calls `rule_check` itself instead of handing the plan to a Checker.
+| | multi-agent | baseline |
+|---|---|---|
+| LLM calls, budget, `llm_call` traces | multi_agent/llm.py `call_llm` + RunContext | same |
+| Model | core/models.py registry | same (`agent` -> Sonnet 5.5) |
+| mrp_tool / schedule_tool / rule_check | multi_agent/tools.py `run_tool` -> project/tools | same |
+| Tool descriptions | multi_agent/tools.py SPECS | same (rule_check also takes the draft, see below) |
+| How a document reaches the model | multi_agent/intake.py `document_content` | same, via read_document |
+| Prompts | multi_agent/prompts/*.md | the three combined (baseline/prompt.py) |
+| Final answer -> WorkOrderPlan | planner.py `PlannerDraft` + `assemble_plan` | same |
 
-Backend interface (core/runner.py): start() runs until the plan waits for approval;
-resume() approves (completed) or adds the human's notes as a new message and re-plans.
-The conversation is kept in memory by run_id, like the multi-agent InMemorySaver.
+rule_check: the Checker passes a full WorkOrderPlan. The single agent passes its draft (the
+same JSON as its final answer); the plan is assembled from its latest mrp_tool and
+schedule_tool outputs exactly as for the final answer, and material readiness comes from
+mrp_tool, as in the Checker.
+
+Trace (API.md §4.4 steps for baseline: `agent`, `approval`):
+    agent_start -> llm_call / tool_call ... -> agent_end -> handoff(agent -> approval) -> interrupt
+    reject: handoff(approval -> agent) -> agent_start ... -> interrupt (new plan version)
+The runner emits run_start, run_end and human_decision, and handles auto_approve.
 """
 from __future__ import annotations
 
@@ -23,201 +32,212 @@ from pathlib import Path
 from typing import Any, Optional
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, ToolMessage
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from core.harness import (Emit, RunContext, chat_model, close_ctx, open_ctx, run_tool_loop,
-                          spec_for)
-from core.schemas import (ApprovalDecision, FactoryPolicyFields, RuleCheckInput, RunConfig, RunError, RunResult,
-                          ScheduleToolInput, WorkOrderPlan)
-from multi_agent.llm import parse_json_reply
-from multi_agent.planner import PlannerDraft, assemble_plan
-from multi_agent.prompts import load_prompt as load_multi_agent_prompt
+from core.schemas import (ApprovalDecision, CapacityLine, CustomerPOLine, DowntimeWindow, FactoryPolicyFields,
+                          PlanningCalendar, RuleCheckInput, RunConfig, RunError, RunResult, WorkOrderPlan)
+from multi_agent.context import Emit, RunContext, close_ctx, open_ctx
+from multi_agent.intake import document_content, list_documents
+from multi_agent.llm import call_llm, chat_model, parse_json_reply, spec_for
+from multi_agent.planner import PlanAssemblyError, PlannerDraft, assemble_plan
 from multi_agent.tools import SPECS, anthropic_tool_defs, dump, run_tool
-from tools.loaders import list_documents, read_input
+
+from .prompt import prompt_version, system_prompt
 
 AGENT = "agent"
-PROMPT_DIR = Path(__file__).parent / "prompts"
-MAX_TURNS = 30          # per planning round; the run's 40-call budget still applies
-MAX_REPAIRS = 2         # same as the multi-agent Planner
+MAX_AGENT_TURNS = 40  # the run budget (40 LLM calls) is the real limit
 
 
-class RuleCheckArgs(BaseModel):
-    """rule_check as the baseline calls it: the draft (assembled with the latest tool outputs)
-    plus the factory policy as read from the documents."""
+class BaselineError(RuntimeError):
+    pass
+
+
+class BaselineRuleCheckArgs(BaseModel):
+    """rule_check input for the single agent: its draft instead of a full plan."""
     model_config = ConfigDict(extra="forbid")
-    draft: PlannerDraft
-    policy: Optional[FactoryPolicyFields] = None
+    draft: PlannerDraft = Field(description="Your draft plan: the same JSON as your final answer")
+    policy: FactoryPolicyFields = FactoryPolicyFields()
+    work_centres: list[CapacityLine]
+    downtime: list[DowntimeWindow] = []
+    order_lines: list[CustomerPOLine] = Field(default=[], description="Customer PO lines, for qty_mismatch checks")
+    calendar: PlanningCalendar = PlanningCalendar()
 
 
-TOOL_DEFS: list[dict] = [
-    {"name": "read_document",
-     "description": "Read one file from the bundle's inputs folder. Spreadsheets come back as rows "
-                    "(r1, r2, ... with every sheet), PDFs as text per page plus page images when the "
-                    "text layer is thin.",
-     "input_schema": {"type": "object", "properties": {"name": {"type": "string", "description": "File name"}},
-                      "required": ["name"], "additionalProperties": False}},
-    *anthropic_tool_defs(["mrp_tool", "schedule_tool"]),
-    {"name": "rule_check", "description": SPECS["rule_check"].description
-        + " Send your draft final answer as `draft` (same JSON as the final answer) and the factory "
-          "working-hours policy as `policy`; work centres, downtime and material dates come from your "
-          "latest schedule_tool and mrp_tool calls.",
-     "input_schema": RuleCheckArgs.model_json_schema()},
-]
-
-
-def system_prompt() -> str:
-    """The baseline prompt: baseline preface + the Planner prompt + the Checker's checklist."""
-    planner = load_multi_agent_prompt("planner")
-    checker = load_multi_agent_prompt("checker")
-    checks = checker.split("Check:", 1)[1].split("Reply with", 1)[0].strip() if "Check:" in checker else checker
-    template = (PROMPT_DIR / "agent.md").read_text(encoding="utf-8")
-    return template.replace("{{PLANNER}}", planner.strip()).replace("{{CHECKER_CHECKS}}", checks)
+READ_DOCUMENT_TOOL = {
+    "name": "read_document",
+    "description": ("Read one document of the bundle by file name. Spreadsheets come back as tab-separated "
+                    "rows (r1, r2, ...), CSV files likewise, PDFs as text per page with the PDF itself attached "
+                    "when its text layer is thin (a scan), images as images."),
+    "input_schema": {"type": "object", "additionalProperties": False, "required": ["file_name"],
+                     "properties": {"file_name": {"type": "string",
+                                                  "description": "Exact file name from the document list"}}},
+}
+RULE_CHECK_TOOL = {
+    "name": "rule_check",
+    "description": (SPECS["rule_check"].description + " Pass your draft plan as `draft` (the same JSON as your "
+                    "final answer); the plan is assembled from your latest mrp_tool and schedule_tool outputs, "
+                    "and material readiness comes from mrp_tool."),
+    "input_schema": BaselineRuleCheckArgs.model_json_schema(),
+}
+TOOLS = [READ_DOCUMENT_TOOL, *anthropic_tool_defs(["mrp_tool", "schedule_tool"]), RULE_CHECK_TOOL]
 
 
 @dataclass
-class _Run:
-    bundle_id: str
+class BaselineSession:
+    """One run's conversation, kept between start() and resume() (in this process)."""
+    run_id: str
     inputs_dir: Path
+    bundle_id: str
     messages: list[BaseMessage]
     tool_outputs: dict[str, Any] = field(default_factory=dict)
-    tool_inputs: dict[str, Any] = field(default_factory=dict)
     plan: Optional[WorkOrderPlan] = None
     plan_version: int = 0
 
 
-_RUNS: dict[str, _Run] = {}
-_LOCK = threading.Lock()
+_SESSIONS: dict[str, BaselineSession] = {}
+_SESSIONS_LOCK = threading.Lock()
 
 
-# --- tools ---------------------------------------------------------------------------------------
+# --- runner backend ------------------------------------------------------------------------
 
-def _execute(ctx: RunContext, run: _Run, tc: dict) -> ToolMessage:
+def start(run_id: str, inputs_dir: Path, config: RunConfig, emit: Emit) -> RunResult:
+    inputs_dir = Path(inputs_dir)
+    bundle_id = inputs_dir.parent.name if inputs_dir.name == "inputs" else inputs_dir.name
+    ctx = open_ctx(run_id, config, emit)
+    ctx.begin_segment()
+    try:
+        docs = [p.name for p in list_documents(inputs_dir)]
+        user = (f"Bundle: {bundle_id}\n\nDocuments in the bundle ({len(docs)}):\n"
+                + "\n".join(f"- {d}" for d in docs)
+                + "\n\nRead the documents, plan with the tools, check the plan, then give the final draft JSON.")
+        session = BaselineSession(run_id, inputs_dir, bundle_id, [SystemMessage(system_prompt()), HumanMessage(user)])
+        with _SESSIONS_LOCK:
+            _SESSIONS[run_id] = session
+        return _round(ctx, session, "Planning")
+    except BaseException:
+        _forget(run_id)
+        raise
+    finally:
+        ctx.end_segment()
+
+
+def resume(run_id: str, decision: ApprovalDecision, config: RunConfig, emit: Emit) -> RunResult:
+    with _SESSIONS_LOCK:
+        session = _SESSIONS.get(run_id)
+    if session is None or session.plan is None:
+        return RunResult(run_id=run_id, status="failed",
+                         error=RunError(code="internal", message=f"run {run_id} is not waiting for approval"))
+    if decision.decision == "approve":
+        _forget(run_id)
+        return RunResult(run_id=run_id, status="completed", plan=session.plan, plan_version=session.plan_version)
+
+    ctx = open_ctx(run_id, config, emit)
+    ctx.begin_segment()
+    try:
+        ctx.handoff("approval", AGENT, f"Approval → Agent: rejected plan v{session.plan_version}: {decision.notes}",
+                    {"notes": decision.notes})
+        # Same wording as the Planner gets on a rejection (planner._context_message).
+        session.messages.append(HumanMessage(
+            "## The human planner rejected an earlier plan. Their notes are binding constraints:\n"
+            f"- {decision.notes or ''}\n\n"
+            "Your last tool outputs are still valid if you do not change their inputs; call the tools again for "
+            "anything the notes change. Then give the corrected final draft JSON."))
+        return _round(ctx, session, "Re-planning after human rejection")
+    except BaseException:
+        _forget(run_id)
+        raise
+    finally:
+        ctx.end_segment()
+
+
+# --- the agent loop ----------------------------------------------------------------------
+
+def _round(ctx: RunContext, session: BaselineSession, reason: str) -> RunResult:
+    """Run the agent until it gives a valid final draft; then wait for approval."""
+    spec = spec_for(AGENT, ctx.config)
+    llm, model_id = chat_model(AGENT, spec)
+    version = session.plan_version + 1
+    ctx.emit("agent_start", agent=AGENT, model=model_id, summary=f"{reason} (plan v{version})",
+             payload={"prompt_version": prompt_version(), "plan_version": version})
+
+    plan: Optional[WorkOrderPlan] = None
+    for _ in range(MAX_AGENT_TURNS):
+        reply = call_llm(ctx, AGENT, llm, model_id, session.messages, tools=TOOLS, purpose=f"plan v{version}")
+        session.messages.append(reply)
+        if reply.tool_calls:
+            for tc in reply.tool_calls:
+                session.messages.append(_run_tool_call(ctx, session, tc))
+            continue
+        try:
+            draft = PlannerDraft.model_validate(parse_json_reply(reply))
+            plan = assemble_plan(draft, session.tool_outputs, bundle_id=session.bundle_id,
+                                 system_id=ctx.config.system_id)
+            break
+        except (ValueError, ValidationError) as exc:  # same repair message as the Planner
+            session.messages.append(HumanMessage(
+                f"Your final answer could not be used: {str(exc)[:2000]}\n"
+                "Fix it (call the tools again if needed) and reply with the corrected draft JSON."))
+    if plan is None:
+        raise BaselineError(f"Baseline agent gave no valid plan in {MAX_AGENT_TURNS} turns")
+
+    session.plan, session.plan_version = plan, version
+    summary = (f"plan v{version}: {len(plan.work_orders)} WO, {len(plan.shortages)} shortage(s), "
+               f"{len(plan.flags)} flag(s), {sum(w.is_late for w in plan.work_orders)} late")
+    ctx.emit("agent_end", agent=AGENT, model=model_id, summary=summary, payload={"plan_version": version})
+    ctx.handoff(AGENT, "approval", f"Agent → Approval: {summary}", {"plan_version": version})
+    ctx.emit("interrupt", agent="approval", summary=f"Plan v{version} waiting for approval",
+             payload={"plan_version": version})
+    return RunResult(run_id=session.run_id, status="awaiting_approval", plan=plan, plan_version=version)
+
+
+def _run_tool_call(ctx: RunContext, session: BaselineSession, tc: dict) -> ToolMessage:
     name, args, call_id = tc.get("name"), tc.get("args") or {}, tc["id"]
     try:
         if name == "read_document":
-            t0 = time.monotonic()
-            doc = read_input(run.inputs_dir, str(args.get("name", "")))
-            ctx.record_tool()
-            ctx.emit("tool_call", agent=AGENT, tool="read_document", item=doc.name,
-                     latency_ms=int((time.monotonic() - t0) * 1000), cost_usd=0,
-                     summary=f"read_document: {doc.name} ({doc.kind}, {len(doc.text)} chars"
-                             + (f", {len(doc.images())} image(s)" if doc.images() else "") + ")")
-            return ToolMessage(content=doc.content_blocks(), tool_call_id=call_id)
+            return ToolMessage(_read_document(ctx, session, args), tool_call_id=call_id)
         if name in ("mrp_tool", "schedule_tool"):
             out = run_tool(ctx, AGENT, name, args)
-            run.tool_outputs[name] = out.model_dump(mode="json")
-            run.tool_inputs[name] = SPECS[name].input_model.model_validate(args).model_dump(mode="json")
+            session.tool_outputs[name] = out.model_dump(mode="json")
             return ToolMessage(dump(out), tool_call_id=call_id)
         if name == "rule_check":
-            out = run_tool(ctx, AGENT, "rule_check", _rule_check_input(run, RuleCheckArgs.model_validate(args)))
-            return ToolMessage(dump(out), tool_call_id=call_id)
-        return ToolMessage(f"Unknown tool {name!r}. Available: {[t['name'] for t in TOOL_DEFS]}",
+            return ToolMessage(dump(run_tool(ctx, AGENT, "rule_check", _rule_check_input(session, args))),
+                               tool_call_id=call_id)
+        return ToolMessage(f"Unknown tool {name!r}. Available: {[t['name'] for t in TOOLS]}",
                            tool_call_id=call_id, status="error")
-    except (ValidationError, ValueError, FileNotFoundError) as exc:
-        return ToolMessage(f"{name}: {str(exc)[:2000]}", tool_call_id=call_id, status="error")
+    except ValidationError as exc:
+        return ToolMessage(f"Invalid arguments for {name}: {str(exc)[:2000]}", tool_call_id=call_id, status="error")
+    except (FileNotFoundError, PlanAssemblyError) as exc:
+        return ToolMessage(f"{name}: {exc}", tool_call_id=call_id, status="error")
     except Exception as exc:  # noqa: BLE001 - a tool bug goes back to the model, not up the stack
         ctx.emit("error", agent=AGENT, tool=name, summary=f"{name} failed: {type(exc).__name__}: {exc}")
         return ToolMessage(f"{name} failed: {type(exc).__name__}: {exc}", tool_call_id=call_id, status="error")
 
 
-def _rule_check_input(run: _Run, args: RuleCheckArgs) -> RuleCheckInput:
-    plan = assemble_plan(args.draft, run.tool_outputs, bundle_id=run.bundle_id, system_id="B")
-    sched_in = run.tool_inputs.get("schedule_tool")
-    if sched_in is None:
-        raise ValueError("call schedule_tool before rule_check")
-    sched = ScheduleToolInput.model_validate(sched_in)
-    material_ready = (run.tool_outputs.get("mrp_tool") or {}).get("material_ready", {})
-    return RuleCheckInput(plan=plan, policy=args.policy or FactoryPolicyFields(), work_centres=sched.work_centres,
-                          downtime=sched.downtime, material_ready=material_ready, calendar=sched.calendar)
+def _read_document(ctx: RunContext, session: BaselineSession, args: dict) -> list[dict]:
+    """The same content blocks Intake's model gets, only for files in inputs/ (hidden-data rule)."""
+    name = str(args.get("file_name", "")).strip()
+    available = [p.name for p in list_documents(session.inputs_dir)]
+    if name not in available:
+        raise FileNotFoundError(f"{name!r} is not a document of this bundle. Available: {', '.join(available)}")
+    t0 = time.monotonic()
+    blocks = document_content(session.inputs_dir / name)
+    with ctx._lock:
+        ctx.tool_calls += 1
+    ctx.emit("tool_call", agent=AGENT, tool="read_document", item=name,
+             latency_ms=int((time.monotonic() - t0) * 1000), cost_usd=0, summary=f"read_document: {name}",
+             payload={"document": name})
+    return blocks
 
 
-# --- one planning round ----------------------------------------------------------------------------
-
-def _plan_round(ctx: RunContext, run: _Run, reason: str) -> RunResult:
-    spec = spec_for(AGENT, ctx.config)
-    llm, model_id = chat_model(AGENT, spec)
-    version = run.plan_version + 1
-    ctx.emit("agent_start", agent=AGENT, model=model_id, summary=f"{reason} (plan v{version})")
-
-    def finish(reply) -> WorkOrderPlan:
-        draft = PlannerDraft.model_validate(parse_json_reply(reply))
-        return assemble_plan(draft, run.tool_outputs, bundle_id=run.bundle_id, system_id=ctx.config.system_id)
-
-    loop = run_tool_loop(ctx, AGENT, llm, model_id, run.messages, tools=TOOL_DEFS,
-                         execute=lambda tc: _execute(ctx, run, tc), finish=finish,
-                         max_turns=MAX_TURNS, max_repairs=MAX_REPAIRS, purpose=f"plan v{version}",
-                         repair_hint="Fix it (call the tools again if needed) and reply with the corrected "
-                                     "final JSON.")  # HarnessError -> runner -> status=failed
-    run.messages = loop.messages
-    run.plan, run.plan_version = loop.value, version
-    plan = run.plan
-    summary = (f"plan v{version}: {len(plan.work_orders)} WO, {len(plan.shortages)} shortage(s), "
-               f"{len(plan.flags)} flag(s), {sum(w.is_late for w in plan.work_orders)} late")
-    ctx.emit("agent_end", agent=AGENT, model=model_id, summary=summary,
-             payload={"plan_version": version, "turns": loop.turns, "repairs": loop.repairs})
-    ctx.handoff(AGENT, "approval", f"Agent → Approval: {summary}", {"plan_version": version})
-    ctx.emit("interrupt", agent="approval", summary=f"Plan v{version} waiting for approval",
-             payload={"plan_version": version})
-    return RunResult(run_id=ctx.run_id, status="awaiting_approval", plan=plan, plan_version=version)
-
-
-def _first_message(bundle_id: str, inputs_dir: Path) -> str:
-    names = [p.name for p in list_documents(inputs_dir)]
-    return (f"Bundle: {bundle_id}\n\nDocuments in the bundle ({len(names)}):\n"
-            + "\n".join(f"- {n}" for n in names)
-            + "\n\nRead the documents, plan with the tools, check the plan with rule_check, then give the "
-              "final JSON.")
-
-
-# --- runner backend ------------------------------------------------------------------------------
-
-def start(run_id: str, inputs_dir: Path, config: RunConfig, emit: Emit) -> RunResult:
-    inputs_dir = Path(inputs_dir)
-    bundle_id = inputs_dir.parent.name if inputs_dir.name == "inputs" else inputs_dir.name
-    run = _Run(bundle_id=bundle_id, inputs_dir=inputs_dir,
-               messages=[SystemMessage(system_prompt()), HumanMessage(_first_message(bundle_id, inputs_dir))])
-    with _LOCK:
-        _RUNS[run_id] = run
-    ctx = open_ctx(run_id, config, emit)
-    ctx.begin_segment()
-    try:
-        result = _plan_round(ctx, run, "Planning")
-    except BaseException:
-        _forget(run_id)
-        raise
-    finally:
-        ctx.end_segment()
-    return result
-
-
-def resume(run_id: str, decision: ApprovalDecision, config: RunConfig, emit: Emit) -> RunResult:
-    run = _RUNS.get(run_id)
-    if run is None or run.plan is None:
-        return RunResult(run_id=run_id, status="failed",
-                         error=RunError(code="internal", message=f"run {run_id} is not waiting for approval"))
-    if decision.decision == "approve":
-        _forget(run_id)
-        return RunResult(run_id=run_id, status="completed", plan=run.plan, plan_version=run.plan_version)
-    ctx = open_ctx(run_id, config, emit)
-    ctx.handoff("approval", AGENT, f"Approval → Agent: rejected plan v{run.plan_version}: {decision.notes}",
-                {"notes": decision.notes})
-    run.messages.append(HumanMessage(
-        "The human planner rejected your plan. Their notes are binding constraints:\n"
-        f"- {decision.notes or '(no notes)'}\n"
-        "Re-plan: call the tools again for anything the notes change, check with rule_check, then give the "
-        "final JSON."))
-    ctx.begin_segment()
-    try:
-        result = _plan_round(ctx, run, "Re-planning after human rejection")
-    except BaseException:
-        _forget(run_id)
-        raise
-    finally:
-        ctx.end_segment()
-    return result
+def _rule_check_input(session: BaselineSession, args: dict) -> RuleCheckInput:
+    a = BaselineRuleCheckArgs.model_validate(args)
+    plan = assemble_plan(a.draft, session.tool_outputs, bundle_id=session.bundle_id, system_id="B")
+    material_ready = (session.tool_outputs.get("mrp_tool") or {}).get("material_ready", {})
+    return RuleCheckInput(plan=plan, policy=a.policy, work_centres=a.work_centres, downtime=a.downtime,
+                          material_ready=material_ready, order_lines=a.order_lines, calendar=a.calendar)
 
 
 def _forget(run_id: str) -> None:
-    with _LOCK:
-        _RUNS.pop(run_id, None)
+    with _SESSIONS_LOCK:
+        _SESSIONS.pop(run_id, None)
     close_ctx(run_id)
