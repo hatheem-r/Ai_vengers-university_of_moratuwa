@@ -1,0 +1,484 @@
+{
+  "bundle_id": "B_S1_typical",
+  "documents": [
+    {
+      "document": "customer_po_AOI-PO-2026-9789.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "AOI/PO/2026/9789",
+        "po_date": "2026-12-07",
+        "customer": "Atlas Office Interiors (Pvt) Ltd",
+        "currency": "LKR",
+        "delivery_date": "2026-12-26",
+        "lines": [
+          {
+            "item_code": "CHR-OFF-01",
+            "buyer_ref": "ART-2005",
+            "qty": 170,
+            "uom": "pcs",
+            "unit_price": 28500.0,
+            "sizes": null
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "CHR-OFF-01",
+          "buyer_ref": "ART-2005",
+          "qty": 170,
+          "uom": "pcs",
+          "unit_price": 28500.0,
+          "sizes": null
+        }
+      ]
+    },
+    {
+      "document": "bom_sapb1_export.xlsx",
+      "doc_type": "bill_of_materials",
+      "fields": {
+        "products": [
+          "CHR-OFF-01"
+        ]
+      },
+      "lines": [
+        {
+          "parent": "CHR-OFF-01",
+          "component": "SA-CHR-FRM",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 0
+        },
+        {
+          "parent": "CHR-OFF-01",
+          "component": "SA-CHR-SEAT",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 0
+        },
+        {
+          "parent": "CHR-OFF-01",
+          "component": "CST-50",
+          "qty_per": 5,
+          "uom": "pcs",
+          "wastage_pct": 1
+        },
+        {
+          "parent": "CHR-OFF-01",
+          "component": "GAS-LFT",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 0
+        },
+        {
+          "parent": "CHR-OFF-01",
+          "component": "SCR-M6-20",
+          "qty_per": 12,
+          "uom": "pcs",
+          "wastage_pct": 2
+        },
+        {
+          "parent": "CHR-OFF-01",
+          "component": "CTN-CHR",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 0
+        },
+        {
+          "parent": "SA-CHR-FRM",
+          "component": "STL-TUB-25",
+          "qty_per": 3.2,
+          "uom": "m",
+          "wastage_pct": 4
+        },
+        {
+          "parent": "SA-CHR-FRM",
+          "component": "STL-SHT-2",
+          "qty_per": 1.1,
+          "uom": "kg",
+          "wastage_pct": 6
+        },
+        {
+          "parent": "SA-CHR-FRM",
+          "component": "PWD-BLK",
+          "qty_per": 0.25,
+          "uom": "kg",
+          "wastage_pct": 8
+        },
+        {
+          "parent": "SA-CHR-SEAT",
+          "component": "PLY-SEAT",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1
+        },
+        {
+          "parent": "SA-CHR-SEAT",
+          "component": "FOAM-40",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1
+        },
+        {
+          "parent": "SA-CHR-SEAT",
+          "component": "FAB-UPH-BLK",
+          "qty_per": 0.9,
+          "uom": "m",
+          "wastage_pct": 5
+        }
+      ]
+    },
+    {
+      "document": "routing_sapb1_stages.xlsx",
+      "doc_type": "routing",
+      "fields": {},
+      "lines": [
+        {
+          "item": "CHR-OFF-01",
+          "seq": 10,
+          "operation": "Laser cutting",
+          "work_centre": "LAS-01",
+          "std_min_per_unit": 4.0,
+          "setup_min": 45
+        },
+        {
+          "item": "CHR-OFF-01",
+          "seq": 20,
+          "operation": "Welding",
+          "work_centre": "WLD-01",
+          "std_min_per_unit": 9.0,
+          "setup_min": 30
+        },
+        {
+          "item": "CHR-OFF-01",
+          "seq": 30,
+          "operation": "Powder coating",
+          "work_centre": "PWC-01",
+          "std_min_per_unit": 3.0,
+          "setup_min": 60
+        },
+        {
+          "item": "CHR-OFF-01",
+          "seq": 40,
+          "operation": "Assembly",
+          "work_centre": "ASM-01",
+          "std_min_per_unit": 12.0,
+          "setup_min": 20
+        },
+        {
+          "item": "CHR-OFF-01",
+          "seq": 50,
+          "operation": "Packing",
+          "work_centre": "PCK-01",
+          "std_min_per_unit": 3.0,
+          "setup_min": 15
+        }
+      ]
+    },
+    {
+      "document": "inventory_status_report.xlsx",
+      "doc_type": "stock_report",
+      "fields": {
+        "as_of": "2026-12-12",
+        "system": "sapb1"
+      },
+      "lines": [
+        {
+          "item_code": "STL-TUB-25",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 854.0,
+          "committed": 40.45,
+          "ordered": 0,
+          "uom": "m",
+          "shown_uom": "m"
+        },
+        {
+          "item_code": "STL-SHT-2",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 328.15,
+          "committed": 35.68,
+          "ordered": 0,
+          "uom": "kg",
+          "shown_uom": "kg"
+        },
+        {
+          "item_code": "STL-SHT-1",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 258.47,
+          "committed": 0.0,
+          "ordered": 0,
+          "uom": "kg",
+          "shown_uom": "kg"
+        },
+        {
+          "item_code": "STL-ANG-40",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 44.730000000000004,
+          "committed": 0.0,
+          "ordered": 0,
+          "uom": "m",
+          "shown_uom": "m"
+        },
+        {
+          "item_code": "PWD-BLK",
+          "warehouse": "02 - Paint Store",
+          "in_stock": 104.32,
+          "committed": 6.84,
+          "ordered": 0,
+          "uom": "kg",
+          "shown_uom": "kg"
+        },
+        {
+          "item_code": "PWD-GRY",
+          "warehouse": "02 - Paint Store",
+          "in_stock": 319.15,
+          "committed": 0.0,
+          "ordered": 0,
+          "uom": "kg",
+          "shown_uom": "kg"
+        },
+        {
+          "item_code": "CST-50",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 1631.0,
+          "committed": 107.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "GAS-LFT",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 284.0,
+          "committed": 14.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "SCR-M6-20",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 3458.0,
+          "committed": 257.0,
+          "ordered": 700.0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "BLT-M8-16",
+          "warehouse": "01 - Raw Material",
+          "in_stock": 431.0,
+          "committed": 0.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "PLY-SEAT",
+          "warehouse": "03 - Upholstery",
+          "in_stock": 260.0,
+          "committed": 15.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "FOAM-40",
+          "warehouse": "03 - Upholstery",
+          "in_stock": 307.0,
+          "committed": 13.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "FAB-UPH-BLK",
+          "warehouse": "03 - Upholstery",
+          "in_stock": 353.55,
+          "committed": 13.92,
+          "ordered": 0,
+          "uom": "m",
+          "shown_uom": "m"
+        },
+        {
+          "item_code": "CTN-CHR",
+          "warehouse": "04 - Packing",
+          "in_stock": 279.0,
+          "committed": 26.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        },
+        {
+          "item_code": "CTN-SHF",
+          "warehouse": "04 - Packing",
+          "in_stock": 213.0,
+          "committed": 0.0,
+          "ordered": 0,
+          "uom": "pcs",
+          "shown_uom": "pcs"
+        }
+      ]
+    },
+    {
+      "document": "capacity_shift_plan.xlsx",
+      "doc_type": "capacity_shift_plan",
+      "fields": {
+        "ot_proposal": null
+      },
+      "lines": [
+        {
+          "work_centre": "LAS-01",
+          "units": 1,
+          "efficiency": 0.85,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "PRS-01"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PRS-01",
+          "units": 1,
+          "efficiency": 0.55,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "WLD-01",
+          "units": 3,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "WLD-02"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "WLD-02",
+          "units": 2,
+          "efficiency": 0.75,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PWC-01",
+          "units": 1,
+          "efficiency": 0.9,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "PWC-02"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PWC-02",
+          "units": 1,
+          "efficiency": 0.45,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "ASM-01",
+          "units": 6,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PCK-01",
+          "units": 3,
+          "efficiency": 0.85,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        }
+      ]
+    },
+    {
+      "document": "daily_production_report_2026-12-12.xlsx",
+      "doc_type": "production_wip_report",
+      "fields": {
+        "date": "2026-12-12"
+      },
+      "lines": [
+        {
+          "order": "PRD-444",
+          "item": "CHR-OFF-01",
+          "work_centre": "LAS-01",
+          "remaining_qty": 70,
+          "load_minutes": 329.4
+        }
+      ]
+    },
+    {
+      "document": "maintenance_log.xlsx",
+      "doc_type": "maintenance_log",
+      "fields": {},
+      "lines": [
+        {
+          "work_centre": "LAS-01",
+          "machine": "LAS-01 Laser source",
+          "start": "2026-12-01",
+          "status": "Closed",
+          "unavailable_until_incl": null,
+          "expected_return": null
+        }
+      ]
+    },
+    {
+      "document": "purchase_order_425.pdf",
+      "doc_type": "supplier_purchase_order",
+      "fields": {
+        "po_number": "425",
+        "supplier_id": "SUP-13",
+        "item_code": "SCR-M6-20",
+        "qty": 700.0,
+        "uom": "pcs",
+        "expected_arrival_printed": "2026-12-14"
+      },
+      "lines": []
+    },
+    {
+      "document": "supplier_invoice_INV-26-4092.pdf",
+      "doc_type": "supplier_tax_invoice",
+      "fields": {
+        "document_no": "INV/26/4092",
+        "supplier_id": "SUP-13",
+        "item_code": "SCR-M6-20",
+        "lot": "SCR-26830",
+        "qty": 3458.0,
+        "uom": "pcs",
+        "currency": "LKR",
+        "unit_price": 9.5,
+        "date_of_supply": "2026-12-09"
+      },
+      "lines": []
+    },
+    {
+      "document": "factory_policy_working_hours.pdf",
+      "doc_type": "factory_policy",
+      "fields": {
+        "regular_hours_week": 48,
+        "max_total_hours_week": 60,
+        "max_ot_hours_day": 2,
+        "max_ot_hours_week": 12,
+        "days_off_per_7": 1,
+        "ot_voluntary": true,
+        "ot_premium_pct": 125
+      },
+      "lines": []
+    }
+  ]
+}

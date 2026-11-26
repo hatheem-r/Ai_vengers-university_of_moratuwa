@@ -1,0 +1,100 @@
+{
+  "bundle_id": "A_S7_clean",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S7",
+  "scenario_name": "Capacity overload",
+  "mess_level": "clean",
+  "seed": 1005,
+  "n_documents": 13,
+  "n_orders": 3,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7765,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7258,
+      "pages": null
+    },
+    {
+      "name": "customer_po_450009039.pdf",
+      "type": "pdf",
+      "size_bytes": 3241,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-1722.pdf",
+      "type": "pdf",
+      "size_bytes": 3281,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-2423.pdf",
+      "type": "pdf",
+      "size_bytes": 3247,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6602,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5416,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6198,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00866.pdf",
+      "type": "pdf",
+      "size_bytes": 2757,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6586,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-6603.pdf",
+      "type": "pdf",
+      "size_bytes": 3070,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [],
+  "defects_applied": [],
+  "planted_conflicts": [],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

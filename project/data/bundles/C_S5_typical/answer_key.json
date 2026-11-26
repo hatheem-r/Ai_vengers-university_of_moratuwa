@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "C_S5_typical",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-11-30",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "TEA-BOP-200",
+      "qty": 72000,
+      "uom": "pcs",
+      "customer_po": "PRT6408",
+      "variant": null,
+      "bom_version": "B-2026",
+      "priority": 1,
+      "due_date": "2026-12-14",
+      "planned_start": "2026-12-08T08:00:00+05:30",
+      "planned_finish": "2026-12-18T08:32:00+05:30",
+      "is_late": true,
+      "days_late": 4,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Blending",
+          "machine_id": "BLD-01",
+          "start": "2026-12-08T08:00:00+05:30",
+          "end": "2026-12-10T14:55:00+05:30",
+          "qty": 72000,
+          "uses_overtime": true
+        },
+        {
+          "seq": 20,
+          "operation": "Filling and sealing",
+          "machine_id": "FIL-01",
+          "start": "2026-12-10T14:55:00+05:30",
+          "end": "2026-12-17T08:55:00+05:30",
+          "qty": 72000,
+          "uses_overtime": true
+        },
+        {
+          "seq": 30,
+          "operation": "Carton packing",
+          "machine_id": "PKG-01",
+          "start": "2026-12-17T08:55:00+05:30",
+          "end": "2026-12-18T08:32:00+05:30",
+          "qty": 72000,
+          "uses_overtime": true
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "BLK-BOP",
+      "uom": "kg",
+      "required_qty": 14616.0,
+      "on_hand_qty": 28652.63,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "BOX-BOP-200",
+      "uom": "pcs",
+      "required_qty": 72720.0,
+      "on_hand_qty": 22913.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 49807.0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-24",
+      "uom": "pcs",
+      "required_qty": 3000.0,
+      "on_hand_qty": 6297.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FLM-INR-200",
+      "uom": "m",
+      "required_qty": 15573.6,
+      "on_hand_qty": 22435.27,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [
+    {
+      "item_code": "BOX-BOP-200",
+      "uom": "pcs",
+      "shortfall_qty": 49807.0,
+      "need_by": "2026-11-30",
+      "affected_work_orders": [
+        "WO-001"
+      ],
+      "cause": "supplier_delay"
+    }
+  ],
+  "suggested_pos": [
+    {
+      "item_code": "BOX-BOP-200",
+      "qty": 50000,
+      "uom": "pcs",
+      "supplier_id": "SUP-23",
+      "need_by": "2026-11-30",
+      "expedite": true,
+      "reason": "Open PO PO/421/26-27 now arrives too late (usable 2026-12-10); alternate supplier Kandy Print & Box can deliver in 6 working days. Needs approval.",
+      "expected_usable_date": "2026-12-08"
+    }
+  ],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "supplier_delay",
+      "severity": "high",
+      "message": "Open PO PO/421/26-27 for Printed box BOP 200 g slips from 2026-12-01 to 2026-12-09; 49807.0 pcs is not available when WO-001 needs it.",
+      "sources": [
+        {
+          "document": "supplier_email_PO-421-26-27.txt",
+          "field": "revised_delivery_date",
+          "value": "2026-12-09",
+          "page": null,
+          "row": null
+        },
+        {
+          "document": "purchase_order_PO-421-26-27.pdf",
+          "field": "expected_arrival",
+          "value": "2026-12-01",
+          "page": null,
+          "row": null
+        },
+        {
+          "document": "godown_summary_tally.xlsx",
+          "field": "on_hand",
+          "value": null,
+          "page": null,
+          "row": 15
+        },
+        {
+          "document": "bom_tally.xlsx",
+          "field": "qty_per_unit",
+          "value": null,
+          "page": null,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": "Wait for the delayed PO or approve the suggested expedited PO to the alternate supplier.",
+      "required": true
+    },
+    {
+      "flag_id": "F2",
+      "type": "due_date_risk",
+      "severity": "high",
+      "message": "WO-001 (PRT6408) finishes 2026-12-18, 4 working day(s) after the due date 2026-12-14.",
+      "sources": [
+        {
+          "document": "customer_po_PRT6408.pdf",
+          "field": "delivery_date",
+          "value": "2026-12-14",
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null,
+      "required": true
+    },
+    {
+      "flag_id": "F3",
+      "type": "needs_approval",
+      "severity": "low",
+      "message": "Plan uses overtime within policy (max 2 h/day) on BLD-01, FIL-01, PKG-01.",
+      "sources": [
+        {
+          "document": "factory_policy_working_hours.pdf",
+          "field": "max_ot_hours_day",
+          "value": 2,
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null,
+      "required": false
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": [
+    "BLD-01",
+    "FIL-01",
+    "PKG-01"
+  ]
+}

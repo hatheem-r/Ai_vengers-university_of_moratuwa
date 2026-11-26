@@ -1,0 +1,205 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "A_S4_messy",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-07",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "LEG-LDS-BLK",
+      "qty": 3240,
+      "uom": "pcs",
+      "customer_po": "KSW/26/4743",
+      "variant": {
+        "colour": "Black",
+        "sizes": {
+          "S": 324,
+          "M": 972,
+          "L": 972,
+          "XL": 648,
+          "XXL": 324
+        }
+      },
+      "bom_version": "v1",
+      "priority": 1,
+      "due_date": "2026-12-17",
+      "planned_start": "2026-12-07T08:00:00+05:30",
+      "planned_finish": "2026-12-17T08:31:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-12-07T08:00:00+05:30",
+          "end": "2026-12-08T11:52:00+05:30",
+          "qty": 3240,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-1",
+          "start": "2026-12-09T15:44:00+05:30",
+          "end": "2026-12-15T15:25:00+05:30",
+          "qty": 3240,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-15T15:25:00+05:30",
+          "end": "2026-12-17T08:31:00+05:30",
+          "qty": 3240,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "CTN-5PLY",
+      "uom": "pcs",
+      "required_qty": 68.0,
+      "on_hand_qty": 121.0,
+      "reserved_qty": 9.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "ELS-30MM",
+      "uom": "m",
+      "required_qty": 2502.9,
+      "on_hand_qty": 5378.06,
+      "reserved_qty": 492.1,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FAB-SPX-BLK",
+      "uom": "kg",
+      "required_qty": 748.44,
+      "on_hand_qty": 1217.1,
+      "reserved_qty": 122.13,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-CARE",
+      "uom": "pcs",
+      "required_qty": 3273.0,
+      "on_hand_qty": 7314.0,
+      "reserved_qty": 331.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-MAIN",
+      "uom": "pcs",
+      "required_qty": 3273.0,
+      "on_hand_qty": 6361.0,
+      "reserved_qty": 519.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PLY-BAG",
+      "uom": "pcs",
+      "required_qty": 3273.0,
+      "on_hand_qty": 6505.0,
+      "reserved_qty": 427.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "TAG-HNG",
+      "uom": "pcs",
+      "required_qty": 3273.0,
+      "on_hand_qty": 5891.0,
+      "reserved_qty": 352.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "THR-PL-40",
+      "uom": "cone",
+      "required_qty": 86.0,
+      "on_hand_qty": 192.0,
+      "reserved_qty": 12.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [],
+  "suggested_pos": [],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "machine_down",
+      "severity": "high",
+      "message": "LINE-3 (FL-305 Flatlock) is down until 2026-12-10 (expected back 2026-12-11).",
+      "sources": [
+        {
+          "document": "maintenance_log.xlsx",
+          "field": "status",
+          "value": "Open",
+          "page": null,
+          "row": 3
+        },
+        {
+          "document": "capacity_shift_plan.xlsx",
+          "field": "status",
+          "value": "DOWN",
+          "page": null,
+          "row": null
+        }
+      ],
+      "needs_human": false,
+      "resolution": "Operations moved to an alternate work centre or after the repair.",
+      "required": true
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": []
+}

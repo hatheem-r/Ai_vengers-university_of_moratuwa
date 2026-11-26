@@ -22,3 +22,7 @@ venv/
 # Run outputs
 logs/
 traces/
+
+# Run folders (trace.jsonl, plan.json)
+runs/
+project/runs/

@@ -1,0 +1,109 @@
+{
+  "bundle_id": "B_S5_clean",
+  "set": "test",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S5",
+  "scenario_name": "Supplier delay",
+  "mess_level": "clean",
+  "seed": 1012,
+  "n_documents": 13,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_sapb1_export.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6066,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7669,
+      "pages": null
+    },
+    {
+      "name": "customer_po_AOI-PO-2026-8816.pdf",
+      "type": "pdf",
+      "size_bytes": 2909,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_HHL-PUR-1109.pdf",
+      "type": "pdf",
+      "size_bytes": 2889,
+      "pages": 1
+    },
+    {
+      "name": "daily_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5160,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2497,
+      "pages": 1
+    },
+    {
+      "name": "inventory_status_report.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6154,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5411,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_704.pdf",
+      "type": "pdf",
+      "size_bytes": 2723,
+      "pages": 1
+    },
+    {
+      "name": "purchase_order_706.pdf",
+      "type": "pdf",
+      "size_bytes": 2758,
+      "pages": 1
+    },
+    {
+      "name": "routing_sapb1_stages.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5405,
+      "pages": null
+    },
+    {
+      "name": "supplier_email_706.txt",
+      "type": "txt",
+      "size_bytes": 543,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-2179.pdf",
+      "type": "pdf",
+      "size_bytes": 2954,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [],
+  "defects_applied": [],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "supplier_delay",
+      "item": "STL-ANG-40",
+      "po_no": "706",
+      "old_eta": "2026-12-08",
+      "new_eta": "2026-12-17",
+      "reason": "customs inspection hold on raw material"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

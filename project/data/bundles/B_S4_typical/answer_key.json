@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "B_S4_typical",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-07",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "SHF-RCK-05",
+      "qty": 370,
+      "uom": "pcs",
+      "customer_po": "MWS2850",
+      "variant": null,
+      "bom_version": "R1",
+      "priority": 1,
+      "due_date": "2026-12-28",
+      "planned_start": "2026-12-11T11:55:00+05:30",
+      "planned_finish": "2026-12-24T15:56:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Laser cutting",
+          "machine_id": "LAS-01",
+          "start": "2026-12-11T11:55:00+05:30",
+          "end": "2026-12-17T09:50:00+05:30",
+          "qty": 370,
+          "uses_overtime": true
+        },
+        {
+          "seq": 20,
+          "operation": "Welding",
+          "machine_id": "WLD-01",
+          "start": "2026-12-17T09:50:00+05:30",
+          "end": "2026-12-18T14:11:00+05:30",
+          "qty": 370,
+          "uses_overtime": true
+        },
+        {
+          "seq": 30,
+          "operation": "Powder coating",
+          "machine_id": "PWC-01",
+          "start": "2026-12-18T14:11:00+05:30",
+          "end": "2026-12-22T16:01:00+05:30",
+          "qty": 370,
+          "uses_overtime": true
+        },
+        {
+          "seq": 40,
+          "operation": "Packing",
+          "machine_id": "PCK-01",
+          "start": "2026-12-22T16:01:00+05:30",
+          "end": "2026-12-24T15:56:00+05:30",
+          "qty": 370,
+          "uses_overtime": true
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "BLT-M8-16",
+      "uom": "pcs",
+      "required_qty": 7548.0,
+      "on_hand_qty": 12906.0,
+      "reserved_qty": 1018.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-SHF",
+      "uom": "pcs",
+      "required_qty": 370.0,
+      "on_hand_qty": 675.0,
+      "reserved_qty": 20.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PWD-GRY",
+      "uom": "kg",
+      "required_qty": 491.51,
+      "on_hand_qty": 916.0,
+      "reserved_qty": 38.38,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "STL-ANG-40",
+      "uom": "m",
+      "required_qty": 2743.92,
+      "on_hand_qty": 5961.3,
+      "reserved_qty": 233.48,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "STL-SHT-1",
+      "uom": "kg",
+      "required_qty": 6604.5,
+      "on_hand_qty": 10699.88,
+      "reserved_qty": 855.44,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [],
+  "suggested_pos": [],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "machine_down",
+      "severity": "high",
+      "message": "LAS-01 (LAS-01 Laser source) is down until 2026-12-10 (expected back 2026-12-11).",
+      "sources": [
+        {
+          "document": "maintenance_log.xlsx",
+          "field": "status",
+          "value": "Open",
+          "page": null,
+          "row": 3
+        },
+        {
+          "document": "capacity_shift_plan.xlsx",
+          "field": "status",
+          "value": "DOWN",
+          "page": null,
+          "row": null
+        }
+      ],
+      "needs_human": false,
+      "resolution": "Operations moved to an alternate work centre or after the repair.",
+      "required": true
+    },
+    {
+      "flag_id": "F2",
+      "type": "needs_approval",
+      "severity": "low",
+      "message": "Plan uses overtime within policy (max 2 h/day) on LAS-01, PCK-01, PWC-01, WLD-01.",
+      "sources": [
+        {
+          "document": "factory_policy_working_hours.pdf",
+          "field": "max_ot_hours_day",
+          "value": 2,
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null,
+      "required": false
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": [
+    "LAS-01",
+    "PCK-01",
+    "PWC-01",
+    "WLD-01"
+  ]
+}

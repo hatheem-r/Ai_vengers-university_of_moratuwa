@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "C_S6_clean",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-07",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "TEA-BOP-200",
+      "qty": 52800,
+      "uom": "pcs",
+      "customer_po": "PRT9328",
+      "variant": null,
+      "bom_version": "B-2026",
+      "priority": 1,
+      "due_date": "2026-12-19",
+      "planned_start": "2026-12-07T08:00:00+05:30",
+      "planned_finish": "2026-12-16T10:52:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Blending",
+          "machine_id": "BLD-01",
+          "start": "2026-12-07T08:00:00+05:30",
+          "end": "2026-12-09T11:08:00+05:30",
+          "qty": 52800,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Filling and sealing",
+          "machine_id": "FIL-01",
+          "start": "2026-12-09T11:08:00+05:30",
+          "end": "2026-12-15T11:44:00+05:30",
+          "qty": 52800,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Carton packing",
+          "machine_id": "PKG-01",
+          "start": "2026-12-15T11:44:00+05:30",
+          "end": "2026-12-16T10:52:00+05:30",
+          "qty": 52800,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "BLK-BOP",
+      "uom": "kg",
+      "required_qty": 10718.4,
+      "on_hand_qty": 19719.15,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "BOX-BOP-200",
+      "uom": "pcs",
+      "required_qty": 53328.0,
+      "on_hand_qty": 89057.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-24",
+      "uom": "pcs",
+      "required_qty": 2200.0,
+      "on_hand_qty": 3650.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FLM-INR-200",
+      "uom": "m",
+      "required_qty": 11420.64,
+      "on_hand_qty": 17954.9,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [],
+  "suggested_pos": [],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "conflict",
+      "severity": "high",
+      "message": "Stock report shows 12,031.49 kg in lot BLK-26230 but the delivery note says 11,831.49 kg were delivered.",
+      "sources": [
+        {
+          "document": "godown_summary_tally.xlsx",
+          "field": "closing_quantity",
+          "value": 12031.49,
+          "page": null,
+          "row": null
+        },
+        {
+          "document": "delivery_note_DN-26-2507.pdf",
+          "field": "qty_delivered",
+          "value": 11831.49,
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": "Use the lower, delivered quantity and ask stores to recount the lot.",
+      "required": true
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": []
+}
