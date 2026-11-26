@@ -1,0 +1,373 @@
+{
+  "bundle_id": "C_S1_messy",
+  "documents": [
+    {
+      "document": "customer_po_PRT6413.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "PRT6413",
+        "po_date": "2026-11-30",
+        "customer": "Pacific Rim Tea Importers Pty Ltd",
+        "currency": "USD",
+        "delivery_date": "2026-12-14",
+        "lines": [
+          {
+            "item_code": "TEA-GRN-100",
+            "buyer_ref": "SKU2065",
+            "qty": 28800,
+            "uom": "pcs",
+            "unit_price": 1.6,
+            "sizes": null
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "TEA-GRN-100",
+          "buyer_ref": "SKU2065",
+          "qty": 28800,
+          "uom": "pcs",
+          "unit_price": 1.6,
+          "sizes": null
+        }
+      ]
+    },
+    {
+      "document": "bom_tally.xlsx",
+      "doc_type": "bill_of_materials",
+      "fields": {
+        "products": [
+          "TEA-GRN-100"
+        ]
+      },
+      "lines": [
+        {
+          "parent": "TEA-GRN-100",
+          "component": "BLK-GRN",
+          "qty_per_1000_incl_loss": 102.0,
+          "uom": "kg",
+          "qty_per": 0.1,
+          "wastage_pct": 2
+        },
+        {
+          "parent": "TEA-GRN-100",
+          "component": "FLM-INR-100",
+          "qty_per_1000_incl_loss": 164.8,
+          "uom": "m",
+          "qty_per": 0.16,
+          "wastage_pct": 3
+        },
+        {
+          "parent": "TEA-GRN-100",
+          "component": "BOX-GRN-100",
+          "qty_per_1000_incl_loss": 1010.0,
+          "uom": "pcs",
+          "qty_per": 1,
+          "wastage_pct": 1
+        },
+        {
+          "parent": "TEA-GRN-100",
+          "component": "CTN-48",
+          "qty_per_1000_incl_loss": 20.8333,
+          "uom": "pcs",
+          "qty_per": 0.020833333333333332,
+          "wastage_pct": 0
+        }
+      ]
+    },
+    {
+      "document": "process_sheet.xlsx",
+      "doc_type": "routing",
+      "fields": {},
+      "lines": [
+        {
+          "item": "TEA-GRN-100",
+          "seq": 10,
+          "operation": "Blending",
+          "work_centre": "BLD-01",
+          "std_min_per_unit": 0.01,
+          "rated_units_per_min": 100.0,
+          "setup_min": 45
+        },
+        {
+          "item": "TEA-GRN-100",
+          "seq": 20,
+          "operation": "Filling and sealing",
+          "work_centre": "FIL-02",
+          "std_min_per_unit": 0.03,
+          "rated_units_per_min": 33.33,
+          "setup_min": 60
+        },
+        {
+          "item": "TEA-GRN-100",
+          "seq": 30,
+          "operation": "Carton packing",
+          "work_centre": "PKG-01",
+          "std_min_per_unit": 0.02,
+          "rated_units_per_min": 50.0,
+          "setup_min": 15
+        }
+      ]
+    },
+    {
+      "document": "godown_summary_tally.xlsx",
+      "doc_type": "stock_report",
+      "fields": {
+        "as_of": "2026-12-05",
+        "system": "tally"
+      },
+      "lines": [
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Main Godown",
+          "batch": "BLK-26960",
+          "qty": 288.37,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-10-23",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Main Godown",
+          "batch": "BLK-26451",
+          "qty": 192.25,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2028-02-20",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Quality Hold Godown",
+          "batch": "RT-5133",
+          "qty": 200.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-06-25",
+          "status": "QC HOLD"
+        },
+        {
+          "item_code": "BLK-GRN",
+          "godown": "Main Godown",
+          "batch": "BLK-26940",
+          "qty": 3796.15,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-06-07",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-GRN",
+          "godown": "Main Godown",
+          "batch": "BLK-26851",
+          "qty": 2530.77,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-10-23",
+          "status": "OK"
+        },
+        {
+          "item_code": "FLM-INR-100",
+          "godown": "Packing Material Store",
+          "batch": "FLM-26150",
+          "qty": 6826.59,
+          "uom": "m",
+          "shown_uom": "m",
+          "expiry": "2027-12-08",
+          "status": "OK"
+        },
+        {
+          "item_code": "FLM-INR-200",
+          "godown": "Packing Material Store",
+          "batch": "FLM-26090",
+          "qty": 9792.44,
+          "uom": "m",
+          "shown_uom": "m",
+          "expiry": "2027-09-16",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-BOP-100",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26030",
+          "qty": 11199.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-12-28",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-BOP-200",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26460",
+          "qty": 24094.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-11-20",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-GRN-100",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26080",
+          "qty": 59439.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-08-15",
+          "status": "OK"
+        },
+        {
+          "item_code": "CTN-48",
+          "godown": "Packing Material Store",
+          "batch": "CTN-26630",
+          "qty": 951.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-11-14",
+          "status": "OK"
+        },
+        {
+          "item_code": "CTN-24",
+          "godown": "Packing Material Store",
+          "batch": "CTN-26380",
+          "qty": 285.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-09-18",
+          "status": "OK"
+        }
+      ]
+    },
+    {
+      "document": "capacity_shift_plan.xlsx",
+      "doc_type": "capacity_shift_plan",
+      "fields": {
+        "ot_proposal": null
+      },
+      "lines": [
+        {
+          "work_centre": "BLD-01",
+          "units": 1,
+          "efficiency": 0.85,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "FIL-01",
+          "units": 1,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "FIL-02"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "FIL-02",
+          "units": 1,
+          "efficiency": 0.65,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "FIL-01"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PKG-01",
+          "units": 4,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        }
+      ]
+    },
+    {
+      "document": "daily_packing_log_2026-12-05.jpg",
+      "doc_type": "production_wip_report",
+      "fields": {
+        "date": "2026-12-05"
+      },
+      "lines": [
+        {
+          "order": "MJ/431",
+          "item": "TEA-BOP-200",
+          "work_centre": "FIL-01",
+          "remaining_qty": 10210,
+          "load_minutes": 459.4
+        },
+        {
+          "order": "MJ/617",
+          "item": "TEA-GRN-100",
+          "work_centre": "FIL-02",
+          "remaining_qty": 11760,
+          "load_minutes": 542.8
+        }
+      ]
+    },
+    {
+      "document": "maintenance_log.csv",
+      "doc_type": "maintenance_log",
+      "fields": {},
+      "lines": [
+        {
+          "work_centre": "BLD-01",
+          "machine": "BLD-01 Drum gearbox",
+          "start": "2026-11-28",
+          "status": "Closed",
+          "unavailable_until_incl": null,
+          "expected_return": null
+        }
+      ]
+    },
+    {
+      "document": "purchase_order_PO-651-26-27.pdf",
+      "doc_type": "supplier_purchase_order",
+      "fields": {
+        "po_number": "PO/651/26-27",
+        "supplier_id": "SUP-23",
+        "item_code": "BOX-GRN-100",
+        "qty": 9000.0,
+        "uom": "pcs",
+        "expected_arrival_printed": "2026-12-07"
+      },
+      "lines": []
+    },
+    {
+      "document": "supplier_invoice_SI-26-7394.pdf",
+      "doc_type": "supplier_tax_invoice",
+      "fields": {
+        "document_no": "SI/26/7394",
+        "supplier_id": "SUP-21",
+        "item_code": "BLK-GRN",
+        "lot": "BLK-26851",
+        "qty": 2530.77,
+        "uom": "kg",
+        "currency": "USD",
+        "unit_price": 7.0,
+        "date_of_supply": "2026-11-25"
+      },
+      "lines": []
+    },
+    {
+      "document": "factory_policy_working_hours.pdf",
+      "doc_type": "factory_policy",
+      "fields": {
+        "regular_hours_week": 48,
+        "max_total_hours_week": 60,
+        "max_ot_hours_day": 2,
+        "max_ot_hours_week": 12,
+        "days_off_per_7": 1,
+        "ot_voluntary": true,
+        "ot_premium_pct": 125
+      },
+      "lines": []
+    }
+  ]
+}

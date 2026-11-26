@@ -1,0 +1,289 @@
+{
+  "bundle_id": "C_S8_messy",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S8",
+  "scenario_name": "Combined shock (shortage + breakdown)",
+  "mess": "messy",
+  "seed": 1017,
+  "planning_start": "2026-12-07",
+  "orders": [
+    {
+      "po_no": "GPF-PO-8651",
+      "customer_id": "CUS-21",
+      "po_date": "2026-11-26",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "TEA-BOP-200",
+          "qty": 43200,
+          "uom": "pcs",
+          "due_date": "2026-12-16",
+          "unit_price": 2.45
+        }
+      ]
+    },
+    {
+      "po_no": "GPF-PO-9220",
+      "customer_id": "CUS-21",
+      "po_date": "2026-12-01",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "TEA-BOP-200",
+          "qty": 31200,
+          "uom": "pcs",
+          "due_date": "2026-12-18",
+          "unit_price": 2.45
+        }
+      ]
+    }
+  ],
+  "stock": {
+    "BLK-BOP": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26350",
+          "qty": 15625.36,
+          "status": "OK",
+          "received": "2026-11-25",
+          "expiry": "2028-01-22"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26181",
+          "qty": 10416.91,
+          "status": "OK",
+          "received": "2026-11-25",
+          "expiry": "2027-10-27"
+        },
+        {
+          "location": "Quality Hold Godown",
+          "lot": "RT-5170",
+          "qty": 250.0,
+          "status": "QC HOLD",
+          "expiry": "2027-06-25",
+          "received": "2026-11-28"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BLK-GRN": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26130",
+          "qty": 404.22,
+          "status": "OK",
+          "received": "2026-11-30",
+          "expiry": "2028-04-04"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26991",
+          "qty": 269.48,
+          "status": "OK",
+          "received": "2026-11-03",
+          "expiry": "2027-09-11"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26820",
+          "qty": 1897.29,
+          "status": "OK",
+          "received": "2026-12-02",
+          "expiry": "2028-01-28"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26690",
+          "qty": 24451.73,
+          "status": "OK",
+          "received": "2026-11-27",
+          "expiry": "2027-10-23"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26510",
+          "qty": 12602.0,
+          "status": "OK",
+          "received": "2026-11-09",
+          "expiry": "2027-04-30"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26160",
+          "qty": 51563.0,
+          "status": "OK",
+          "received": "2026-11-04",
+          "expiry": "2027-08-29"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-GRN-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26200",
+          "qty": 19323.0,
+          "status": "OK",
+          "received": "2026-11-01",
+          "expiry": "2027-12-05"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-48": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26050",
+          "qty": 758.0,
+          "status": "OK",
+          "received": "2026-11-25",
+          "expiry": "2028-04-17"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-24": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26360",
+          "qty": 5108.0,
+          "status": "OK",
+          "received": "2026-11-20",
+          "expiry": "2028-02-24"
+        }
+      ],
+      "reserved": 0.0
+    }
+  },
+  "open_pos": [
+    {
+      "po_no": "PO/962/26-27",
+      "supplier_id": "SUP-21",
+      "order_date": "2026-11-30",
+      "eta": "2026-12-08",
+      "eta_printed": "2026-12-08",
+      "lines": [
+        {
+          "item": "BLK-BOP",
+          "qty": 4550.0,
+          "price": 1650.0
+        }
+      ]
+    }
+  ],
+  "downtime": [
+    {
+      "wc": "FIL-01",
+      "machine": "FIL-01 Heat sealer jaw assembly",
+      "start": "2026-12-05",
+      "end": "2026-12-11",
+      "reason": "Spare part awaited",
+      "status": "Open",
+      "expected_return": "2026-12-12",
+      "remarks": "Motor burnt, rewinding at outside workshop"
+    }
+  ],
+  "maintenance_noise": [
+    {
+      "wc": "BLD-01",
+      "machine": "BLD-01 Drum gearbox",
+      "start": "2026-11-21",
+      "end": null,
+      "hours": 3.8,
+      "reason": "Electrical fault",
+      "status": "Closed",
+      "remarks": "Contactor replaced, tested OK"
+    }
+  ],
+  "wip": [
+    {
+      "wo": "MJ/420",
+      "item": "TEA-BOP-200",
+      "wc": "FIL-01",
+      "remaining_qty": 11450,
+      "minutes": 515.2,
+      "done_qty": 15360,
+      "customer": "CUS-21"
+    },
+    {
+      "wo": "MJ/452",
+      "item": "TEA-GRN-100",
+      "wc": "FIL-02",
+      "remaining_qty": 10500,
+      "minutes": 484.6,
+      "done_qty": 8630,
+      "customer": "CUS-23"
+    },
+    {
+      "wo": "MJ/784",
+      "item": "TEA-GRN-100",
+      "wc": "FIL-02",
+      "remaining_qty": 17530,
+      "minutes": 809.1,
+      "done_qty": 23060,
+      "customer": "CUS-23"
+    }
+  ],
+  "conflicts": [],
+  "events": [
+    {
+      "type": "shortage",
+      "item": "BOX-BOP-200"
+    },
+    {
+      "type": "breakdown",
+      "wc": "FIL-01"
+    }
+  ],
+  "policy": {
+    "regular_hours_week": 48,
+    "max_total_hours_week": 60,
+    "max_ot_hours_day": 2,
+    "max_ot_hours_week": 12,
+    "days_off_per_7": 1,
+    "ot_voluntary": true,
+    "ot_premium_pct": 125
+  },
+  "ot_proposal": null,
+  "defects": [
+    "unit_variant",
+    "dmy_dates",
+    "title_block",
+    "names_not_codes",
+    "scanned_doc",
+    "column_renamed"
+  ],
+  "layouts": {
+    "customer_po": 2,
+    "supplier_invoice": 1
+  }
+}

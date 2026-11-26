@@ -1,0 +1,15 @@
+From: dispatch@kandy.example
+To: stores@hillcountrytea.example
+Date: Sat, 05 Dec 2026 16:42 +0530
+Subject: RE: PO PO/550/26-27 - revised delivery date
+
+Dear Sir/Madam,
+
+We regret to inform you that delivery of your PO PO/550/26-27 (Printed box BOP 200 g, 25,000 pcs) will be delayed due to customs inspection hold on raw material.
+The revised delivery date is 15/12/2026 (earlier confirmed 08/12/2026).
+
+We apologise for the inconvenience. Please let us know if a part shipment would help.
+
+Best regards,
+Dispatch Coordinator
+Kandy Print & Box

@@ -1,0 +1,116 @@
+{
+  "bundle_id": "B_S4_typical",
+  "set": "test",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S4",
+  "scenario_name": "Machine breakdown",
+  "mess_level": "typical",
+  "seed": 1011,
+  "n_documents": 10,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_sapb1_export.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6066,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7592,
+      "pages": null
+    },
+    {
+      "name": "customer_po_MWS2850.pdf",
+      "type": "pdf",
+      "size_bytes": 3007,
+      "pages": 1
+    },
+    {
+      "name": "daily_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5433,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2497,
+      "pages": 1
+    },
+    {
+      "name": "inventory_status_report.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6372,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5549,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_689.pdf",
+      "type": "pdf",
+      "size_bytes": 2749,
+      "pages": 1
+    },
+    {
+      "name": "routing_sapb1_stages.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5405,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_TI-26-8853.pdf",
+      "type": "pdf",
+      "size_bytes": 3048,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "title_block",
+    "unit_variant",
+    "dmy_dates"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "unit_variant",
+      "document": "inventory_status_report.xlsx",
+      "detail": {
+        "SCR-M6-20": {
+          "shown_uom": "Box (100)",
+          "base_per_shown": 100
+        },
+        "BLT-M8-16": {
+          "shown_uom": "Box (100)",
+          "base_per_shown": 100
+        }
+      }
+    },
+    {
+      "defect": "title_block",
+      "document": "inventory_status_report.xlsx",
+      "detail": "report title rows above the header"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "breakdown",
+      "wc": "LAS-01"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

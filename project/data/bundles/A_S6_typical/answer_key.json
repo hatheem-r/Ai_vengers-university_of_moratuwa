@@ -1,0 +1,205 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "A_S6_typical",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-07",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "LEG-LDS-BLK",
+      "qty": 1680,
+      "uom": "pcs",
+      "customer_po": "KSW/26/1102",
+      "variant": {
+        "colour": "Black",
+        "sizes": {
+          "S": 168,
+          "M": 504,
+          "L": 504,
+          "XL": 336,
+          "XXL": 168
+        }
+      },
+      "bom_version": "v1",
+      "priority": 1,
+      "due_date": "2026-12-15",
+      "planned_start": "2026-12-07T08:00:00+05:30",
+      "planned_finish": "2026-12-11T14:06:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-12-07T08:00:00+05:30",
+          "end": "2026-12-07T15:31:00+05:30",
+          "qty": 1680,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-2",
+          "start": "2026-12-08T08:50:00+05:30",
+          "end": "2026-12-10T16:37:00+05:30",
+          "qty": 1680,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-10T16:37:00+05:30",
+          "end": "2026-12-11T14:06:00+05:30",
+          "qty": 1680,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "CTN-5PLY",
+      "uom": "pcs",
+      "required_qty": 35.0,
+      "on_hand_qty": 78.0,
+      "reserved_qty": 2.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "ELS-30MM",
+      "uom": "m",
+      "required_qty": 1297.8,
+      "on_hand_qty": 2482.79,
+      "reserved_qty": 254.78,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FAB-SPX-BLK",
+      "uom": "kg",
+      "required_qty": 388.08,
+      "on_hand_qty": 809.78,
+      "reserved_qty": 22.81,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-CARE",
+      "uom": "pcs",
+      "required_qty": 1697.0,
+      "on_hand_qty": 2704.0,
+      "reserved_qty": 99.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-MAIN",
+      "uom": "pcs",
+      "required_qty": 1697.0,
+      "on_hand_qty": 2929.0,
+      "reserved_qty": 121.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PLY-BAG",
+      "uom": "pcs",
+      "required_qty": 1697.0,
+      "on_hand_qty": 3678.0,
+      "reserved_qty": 303.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "TAG-HNG",
+      "uom": "pcs",
+      "required_qty": 1697.0,
+      "on_hand_qty": 3097.0,
+      "reserved_qty": 263.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "THR-PL-40",
+      "uom": "cone",
+      "required_qty": 45.0,
+      "on_hand_qty": 74.0,
+      "reserved_qty": 5.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [],
+  "suggested_pos": [],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "conflict",
+      "severity": "high",
+      "message": "Customer PO KSW/26/1102 says 1,680 pcs but the sales order confirmation says 1,320.",
+      "sources": [
+        {
+          "document": "customer_po_KSW-26-1102.pdf",
+          "field": "qty",
+          "value": 1680,
+          "page": 1,
+          "row": null
+        },
+        {
+          "document": "sales_order_confirmation_KSW-26-1102.pdf",
+          "field": "qty",
+          "value": 1320,
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": "Plan the customer PO quantity, flag for sales to confirm with the buyer.",
+      "required": true
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": []
+}

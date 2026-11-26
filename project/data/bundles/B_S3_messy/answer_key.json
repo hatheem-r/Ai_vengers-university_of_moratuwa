@@ -1,0 +1,278 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "B_S3_messy",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-14",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "CHR-OFF-01",
+      "qty": 480,
+      "uom": "pcs",
+      "customer_po": "HHL-PUR-7035",
+      "variant": null,
+      "bom_version": "R2",
+      "priority": 1,
+      "due_date": "2027-01-06",
+      "planned_start": "2026-12-17T08:00:00+05:30",
+      "planned_finish": "2027-01-06T15:34:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Laser cutting",
+          "machine_id": "LAS-01",
+          "start": "2026-12-17T08:00:00+05:30",
+          "end": "2026-12-22T15:24:00+05:30",
+          "qty": 480,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Welding",
+          "machine_id": "WLD-01",
+          "start": "2026-12-22T15:24:00+05:30",
+          "end": "2026-12-29T13:54:00+05:30",
+          "qty": 480,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Powder coating",
+          "machine_id": "PWC-01",
+          "start": "2026-12-29T13:54:00+05:30",
+          "end": "2027-01-02T08:34:00+05:30",
+          "qty": 480,
+          "uses_overtime": false
+        },
+        {
+          "seq": 40,
+          "operation": "Assembly",
+          "machine_id": "ASM-01",
+          "start": "2027-01-02T08:34:00+05:30",
+          "end": "2027-01-05T13:54:00+05:30",
+          "qty": 480,
+          "uses_overtime": false
+        },
+        {
+          "seq": 50,
+          "operation": "Packing",
+          "machine_id": "PCK-01",
+          "start": "2027-01-05T13:54:00+05:30",
+          "end": "2027-01-06T15:34:00+05:30",
+          "qty": 480,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "CST-50",
+      "uom": "pcs",
+      "required_qty": 2424.0,
+      "on_hand_qty": 5279.0,
+      "reserved_qty": 423.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-CHR",
+      "uom": "pcs",
+      "required_qty": 480.0,
+      "on_hand_qty": 879.0,
+      "reserved_qty": 88.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FAB-UPH-BLK",
+      "uom": "m",
+      "required_qty": 453.6,
+      "on_hand_qty": 715.36,
+      "reserved_qty": 83.64,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FOAM-40",
+      "uom": "pcs",
+      "required_qty": 485.0,
+      "on_hand_qty": 771.0,
+      "reserved_qty": 69.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "GAS-LFT",
+      "uom": "pcs",
+      "required_qty": 480.0,
+      "on_hand_qty": 962.0,
+      "reserved_qty": 47.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PLY-SEAT",
+      "uom": "pcs",
+      "required_qty": 485.0,
+      "on_hand_qty": 752.0,
+      "reserved_qty": 88.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PWD-BLK",
+      "uom": "kg",
+      "required_qty": 129.6,
+      "on_hand_qty": 223.49,
+      "reserved_qty": 23.37,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "SCR-M6-20",
+      "uom": "pcs",
+      "required_qty": 5876.0,
+      "on_hand_qty": 4420.0,
+      "reserved_qty": 713.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 2169.0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "STL-SHT-2",
+      "uom": "kg",
+      "required_qty": 559.68,
+      "on_hand_qty": 1269.02,
+      "reserved_qty": 40.07,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "STL-TUB-25",
+      "uom": "m",
+      "required_qty": 1597.44,
+      "on_hand_qty": 2943.73,
+      "reserved_qty": 83.32,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [
+    {
+      "item_code": "SCR-M6-20",
+      "uom": "pcs",
+      "shortfall_qty": 2169.0,
+      "need_by": "2026-12-14",
+      "affected_work_orders": [
+        "WO-001"
+      ],
+      "cause": "insufficient_stock"
+    }
+  ],
+  "suggested_pos": [
+    {
+      "item_code": "SCR-M6-20",
+      "qty": 2200,
+      "uom": "pcs",
+      "supplier_id": "SUP-16",
+      "need_by": "2026-12-14",
+      "expedite": true,
+      "reason": "Covers the 2169.0 pcs shortfall; Ceylon Metal Mart lead time is 2 working days.",
+      "expected_usable_date": "2026-12-17"
+    }
+  ],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "shortage",
+      "severity": "high",
+      "message": "Screw M6 x 20 hex socket is 2169.0 pcs short for WO-001.",
+      "sources": [
+        {
+          "document": "inventory_status_report.xlsx",
+          "field": "on_hand",
+          "value": null,
+          "page": null,
+          "row": 10
+        },
+        {
+          "document": "bom_sapb1_export.xlsx",
+          "field": "qty_per_unit",
+          "value": null,
+          "page": null,
+          "row": null
+        }
+      ],
+      "needs_human": false,
+      "resolution": "Suggested PO raised; affected work order starts after the material is usable.",
+      "required": true
+    },
+    {
+      "flag_id": "F2",
+      "type": "missing_field",
+      "severity": "high",
+      "message": "Customer PO HHL-PUR-7035 has no delivery date ('TBC').",
+      "sources": [
+        {
+          "document": "customer_po_HHL-PUR-7035.pdf",
+          "field": "delivery_date",
+          "value": "TBC",
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null,
+      "required": true
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": []
+}

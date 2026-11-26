@@ -1,0 +1,141 @@
+{
+  "bundle_id": "dev_C_S5_messy",
+  "set": "dev",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S5",
+  "scenario_name": "Supplier delay",
+  "mess_level": "messy",
+  "seed": 13,
+  "n_documents": 13,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5686,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7269,
+      "pages": null
+    },
+    {
+      "name": "customer_po_LSM-PO-3403.pdf",
+      "type": "pdf",
+      "size_bytes": 2879,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_LSM-PO-8155.pdf",
+      "type": "pdf",
+      "size_bytes": 2876,
+      "pages": 1
+    },
+    {
+      "name": "daily_packing_log_2026-12-05.jpg",
+      "type": "jpg",
+      "size_bytes": 38584,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2494,
+      "pages": 1
+    },
+    {
+      "name": "godown_summary_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7946,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.csv",
+      "type": "csv",
+      "size_bytes": 301,
+      "pages": null
+    },
+    {
+      "name": "process_sheet.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5588,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_PO-550-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2766,
+      "pages": 1
+    },
+    {
+      "name": "purchase_order_PO-884-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2789,
+      "pages": 1
+    },
+    {
+      "name": "supplier_email_PO-550-26-27.txt",
+      "type": "txt",
+      "size_bytes": 544,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_TI-26-2404.pdf",
+      "type": "pdf",
+      "size_bytes": 63450,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "blank_noncritical",
+    "mixed_currency",
+    "dmy_dates",
+    "two_sheets",
+    "scanned_doc"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "two_sheets",
+      "document": "godown_summary_tally.xlsx",
+      "detail": "stock split into one sheet per store/warehouse"
+    },
+    {
+      "defect": "scanned_doc",
+      "document": "daily_packing_log_2026-12-05.jpg",
+      "detail": "paper packing log, photographed"
+    },
+    {
+      "defect": "scanned_doc",
+      "document": "supplier_invoice_TI-26-2404.pdf",
+      "detail": "supplier tax invoice is a scanned image"
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_TI-26-2404.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "supplier_delay",
+      "item": "BOX-BOP-200",
+      "po_no": "PO/550/26-27",
+      "old_eta": "2026-12-08",
+      "new_eta": "2026-12-15",
+      "reason": "customs inspection hold on raw material"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}
