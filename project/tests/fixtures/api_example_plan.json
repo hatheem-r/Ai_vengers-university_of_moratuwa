@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "A_S3_typical",
+  "system_id": "M-mix",
+  "created_at": "2026-11-23T09:31:40+05:30",
+  "planning_start": "2026-11-24",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "POLO-PIQ-NVY",
+      "qty": 2400,
+      "uom": "pcs",
+      "customer_po": "PO-4471",
+      "variant": {
+        "colour": "Navy",
+        "size": "M"
+      },
+      "bom_version": "v3",
+      "priority": 1,
+      "due_date": "2026-12-08",
+      "planned_start": "2026-11-27T08:00:00+05:30",
+      "planned_finish": "2026-12-09T17:00:00+05:30",
+      "is_late": true,
+      "days_late": 1,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-11-27T08:00:00+05:30",
+          "end": "2026-11-28T12:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-2",
+          "start": "2026-11-30T08:00:00+05:30",
+          "end": "2026-12-08T17:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-09T08:00:00+05:30",
+          "end": "2026-12-09T17:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "required_qty": 612.0,
+      "on_hand_qty": 367.2,
+      "reserved_qty": 0,
+      "on_order_qty": 0,
+      "net_shortage_qty": 244.8,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "BTN-4H-15L",
+      "uom": "pcs",
+      "required_qty": 7344,
+      "on_hand_qty": 12000,
+      "reserved_qty": 2000,
+      "on_order_qty": 0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "shortfall_qty": 244.8,
+      "need_by": "2026-11-26",
+      "affected_work_orders": [
+        "WO-001"
+      ],
+      "cause": "insufficient_stock"
+    }
+  ],
+  "suggested_pos": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "qty": 250,
+      "uom": "kg",
+      "supplier_id": "SUP-03",
+      "need_by": "2026-11-26",
+      "expedite": true,
+      "reason": "Covers the 244.8 kg shortfall; SUP-03 lead time is 2 days."
+    }
+  ],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "shortage",
+      "severity": "high",
+      "message": "Navy pique fabric is 244.8 kg short for WO-001; cutting cannot start before the expedited PO arrives.",
+      "sources": [
+        {
+          "document": "stock_report.xlsx",
+          "field": "on_hand",
+          "value": 367.2,
+          "page": null,
+          "row": 14
+        },
+        {
+          "document": "bom_polo.xlsx",
+          "field": "qty_per_unit",
+          "value": 0.25,
+          "page": null,
+          "row": 3
+        }
+      ],
+      "needs_human": false,
+      "resolution": "Suggested expedited PO to SUP-03; start moved to 27 Nov."
+    },
+    {
+      "flag_id": "F2",
+      "type": "due_date_risk",
+      "severity": "medium",
+      "message": "WO-001 finishes 1 working day after the buyer's ex-factory date.",
+      "sources": [
+        {
+          "document": "customer_po_4471.pdf",
+          "field": "delivery_date",
+          "value": "2026-12-08",
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null
+    }
+  ],
+  "assumptions": [
+    "BoM wastage of 2% applied to fabric and buttons."
+  ],
+  "rationale": "PO-4471 is the only open order. The fabric shortage delays cutting by 3 days ...",
+  "checker": {
+    "verdict": "pass",
+    "revisions_used": 1,
+    "issues": [
+      "First plan scheduled cutting before the fabric PO arrives."
+    ],
+    "open_issues": [
+      "Ask the buyer whether a 1-day slip is acceptable."
+    ]
+  }
+}

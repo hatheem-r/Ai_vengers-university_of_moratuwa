@@ -5,10 +5,11 @@ pandas
 openpyxl
 pdfplumber
 ortools
-pydantic
+pydantic>=2.6
 python-dotenv
 fastapi
 uvicorn[standard]
 python-multipart
 httpx
+streamlit
 pytest

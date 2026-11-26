@@ -1,0 +1,830 @@
+{
+  "bundle_id": "A_S7_clean",
+  "documents": [
+    {
+      "document": "customer_po_NWO-PO-1722.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "NWO-PO-1722",
+        "po_date": "2026-12-03",
+        "customer": "Northwind Outfitters Ltd",
+        "currency": "USD",
+        "delivery_date": "2026-12-21",
+        "lines": [
+          {
+            "item_code": "POLO-PIQ-WHT",
+            "buyer_ref": "POLO-PIQ-WHT",
+            "qty": 2280,
+            "uom": "pcs",
+            "unit_price": 6.6,
+            "sizes": {
+              "S": 228,
+              "M": 684,
+              "L": 684,
+              "XL": 456,
+              "XXL": 228
+            }
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "POLO-PIQ-WHT",
+          "buyer_ref": "POLO-PIQ-WHT",
+          "qty": 2280,
+          "uom": "pcs",
+          "unit_price": 6.6,
+          "sizes": {
+            "S": 228,
+            "M": 684,
+            "L": 684,
+            "XL": 456,
+            "XXL": 228
+          }
+        }
+      ]
+    },
+    {
+      "document": "customer_po_450009039.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "450009039",
+        "po_date": "2026-11-29",
+        "customer": "Bluefjord Retail AB",
+        "currency": "USD",
+        "delivery_date": "2026-12-14",
+        "lines": [
+          {
+            "item_code": "POLO-PIQ-WHT",
+            "buyer_ref": "POLO-PIQ-WHT",
+            "qty": 1560,
+            "uom": "pcs",
+            "unit_price": 6.6,
+            "sizes": {
+              "S": 156,
+              "M": 468,
+              "L": 468,
+              "XL": 312,
+              "XXL": 156
+            }
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "POLO-PIQ-WHT",
+          "buyer_ref": "POLO-PIQ-WHT",
+          "qty": 1560,
+          "uom": "pcs",
+          "unit_price": 6.6,
+          "sizes": {
+            "S": 156,
+            "M": 468,
+            "L": 468,
+            "XL": 312,
+            "XXL": 156
+          }
+        }
+      ]
+    },
+    {
+      "document": "customer_po_NWO-PO-2423.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "NWO-PO-2423",
+        "po_date": "2026-12-02",
+        "customer": "Northwind Outfitters Ltd",
+        "currency": "USD",
+        "delivery_date": "2026-12-19",
+        "lines": [
+          {
+            "item_code": "POLO-PIQ-NVY",
+            "buyer_ref": "POLO-PIQ-NVY",
+            "qty": 2280,
+            "uom": "pcs",
+            "unit_price": 6.85,
+            "sizes": {
+              "S": 228,
+              "M": 684,
+              "L": 684,
+              "XL": 456,
+              "XXL": 228
+            }
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "POLO-PIQ-NVY",
+          "buyer_ref": "POLO-PIQ-NVY",
+          "qty": 2280,
+          "uom": "pcs",
+          "unit_price": 6.85,
+          "sizes": {
+            "S": 228,
+            "M": 684,
+            "L": 684,
+            "XL": 456,
+            "XXL": 228
+          }
+        }
+      ]
+    },
+    {
+      "document": "bom_techpack.xlsx",
+      "doc_type": "bill_of_materials",
+      "fields": {
+        "products": [
+          "POLO-PIQ-NVY",
+          "POLO-PIQ-WHT"
+        ]
+      },
+      "lines": [
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "FAB-PIQ-NVY",
+          "qty_per": 0.255,
+          "uom": "kg",
+          "wastage_pct": 5,
+          "consumed_in": "Cutting"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "RIB-COL-NVY",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 2,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "BTN-4H-15L",
+          "qty_per": 3,
+          "uom": "pcs",
+          "wastage_pct": 3,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "THR-PL-40",
+          "qty_per": 0.03,
+          "uom": "cone",
+          "wastage_pct": 5,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "LBL-MAIN",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "LBL-CARE",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "TAG-HNG",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Finishing and packing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "PLY-BAG",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Finishing and packing"
+        },
+        {
+          "parent": "POLO-PIQ-NVY",
+          "component": "CTN-5PLY",
+          "qty_per": 0.041666666666666664,
+          "uom": "pcs",
+          "wastage_pct": 0,
+          "consumed_in": "Finishing and packing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "FAB-PIQ-WHT",
+          "qty_per": 0.255,
+          "uom": "kg",
+          "wastage_pct": 5,
+          "consumed_in": "Cutting"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "RIB-COL-WHT",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 2,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "BTN-4H-15L",
+          "qty_per": 3,
+          "uom": "pcs",
+          "wastage_pct": 3,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "THR-PL-40",
+          "qty_per": 0.03,
+          "uom": "cone",
+          "wastage_pct": 5,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "LBL-MAIN",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "LBL-CARE",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Sewing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "TAG-HNG",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Finishing and packing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "PLY-BAG",
+          "qty_per": 1,
+          "uom": "pcs",
+          "wastage_pct": 1,
+          "consumed_in": "Finishing and packing"
+        },
+        {
+          "parent": "POLO-PIQ-WHT",
+          "component": "CTN-5PLY",
+          "qty_per": 0.041666666666666664,
+          "uom": "pcs",
+          "wastage_pct": 0,
+          "consumed_in": "Finishing and packing"
+        }
+      ]
+    },
+    {
+      "document": "routing_odoo_operations.xlsx",
+      "doc_type": "routing",
+      "fields": {},
+      "lines": [
+        {
+          "style": "SC-POLO-261",
+          "seq": 10,
+          "operation": "Cutting",
+          "work_centre": "CUT-01",
+          "std_min_per_unit": 0.9,
+          "setup_min": 60
+        },
+        {
+          "style": "SC-POLO-261",
+          "seq": 20,
+          "operation": "Sewing",
+          "work_centre": "LINE-2",
+          "std_min_per_unit": 18.5,
+          "setup_min": 120
+        },
+        {
+          "style": "SC-POLO-261",
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "work_centre": "PACK-01",
+          "std_min_per_unit": 2.5,
+          "setup_min": 30
+        }
+      ]
+    },
+    {
+      "document": "operation_bulletin.xlsx",
+      "doc_type": "operation_bulletin",
+      "fields": {},
+      "lines": [
+        {
+          "style": "SC-POLO-261",
+          "operation": "Join shoulder",
+          "machine_type": "4T Overlock",
+          "smv": 0.55
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Attach placket",
+          "machine_type": "SNLS",
+          "smv": 1.45
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Placket top stitch",
+          "machine_type": "SNLS",
+          "smv": 1.1
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Box placket close",
+          "machine_type": "SNLS",
+          "smv": 1.3
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Attach collar",
+          "machine_type": "SNLS",
+          "smv": 1.4
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Collar top stitch",
+          "machine_type": "SNLS",
+          "smv": 0.95
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Attach main + care label",
+          "machine_type": "SNLS",
+          "smv": 0.6
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Attach sleeve",
+          "machine_type": "4T Overlock",
+          "smv": 1.2
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Sleeve hem",
+          "machine_type": "Flatlock",
+          "smv": 0.9
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Side seam with side slit",
+          "machine_type": "4T Overlock",
+          "smv": 1.6
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Side slit tack",
+          "machine_type": "SNLS",
+          "smv": 0.85
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Bottom hem",
+          "machine_type": "Flatlock",
+          "smv": 0.95
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Buttonhole x3",
+          "machine_type": "Buttonhole",
+          "smv": 1.15
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Button attach x3",
+          "machine_type": "Button sew",
+          "smv": 1.0
+        },
+        {
+          "style": "SC-POLO-261",
+          "operation": "Trim threads + inline check",
+          "machine_type": "Manual",
+          "smv": 3.5
+        }
+      ]
+    },
+    {
+      "document": "stock_on_hand_odoo.xlsx",
+      "doc_type": "stock_report",
+      "fields": {
+        "as_of": "2026-12-05",
+        "system": "odoo"
+      },
+      "lines": [
+        {
+          "item_code": "FAB-PIQ-NVY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26960",
+          "on_hand": 624.77,
+          "reserved": 111.01,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-PIQ-NVY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26451",
+          "on_hand": 416.51,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-PIQ-WHT",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26860",
+          "on_hand": 1283.19,
+          "reserved": 58.68,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-PIQ-WHT",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26351",
+          "on_hand": 855.46,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SJ-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26560",
+          "on_hand": 289.16,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SJ-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26651",
+          "on_hand": 192.77,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SJ-GRY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26020",
+          "on_hand": 236.09,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SJ-GRY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26781",
+          "on_hand": 157.39,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SPX-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26460",
+          "on_hand": 163.73,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "FAB-SPX-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26241",
+          "on_hand": 109.15,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-COL-NVY",
+          "location": "WH/Stock/Trims Store",
+          "lot": "RIB-26800",
+          "on_hand": 5097.0,
+          "reserved": 304.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-COL-WHT",
+          "location": "WH/Stock/Trims Store",
+          "lot": "RIB-26030",
+          "on_hand": 5532.0,
+          "reserved": 216.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-1X1-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26080",
+          "on_hand": 21.85,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-1X1-BLK",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26591",
+          "on_hand": 14.57,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-1X1-GRY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26200",
+          "on_hand": 32.54,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "RIB-1X1-GRY",
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26211",
+          "on_hand": 21.69,
+          "reserved": 0.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "status": "OK"
+        },
+        {
+          "item_code": "BTN-4H-15L",
+          "location": "WH/Stock/Trims Store",
+          "lot": "BTN-26440",
+          "on_hand": 38491.0,
+          "reserved": 2770.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "ELS-30MM",
+          "location": "WH/Stock/Trims Store",
+          "lot": "ELS-26550",
+          "on_hand": 688.83,
+          "reserved": 0.0,
+          "uom": "m",
+          "shown_uom": "m",
+          "status": "OK"
+        },
+        {
+          "item_code": "THR-PL-40",
+          "location": "WH/Stock/Trims Store",
+          "lot": "THR-26450",
+          "on_hand": 430.0,
+          "reserved": 17.0,
+          "uom": "cone",
+          "shown_uom": "cone",
+          "status": "OK"
+        },
+        {
+          "item_code": "LBL-MAIN",
+          "location": "WH/Stock/Trims Store",
+          "lot": "LBL-26260",
+          "on_hand": 13418.0,
+          "reserved": 517.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "LBL-CARE",
+          "location": "WH/Stock/Trims Store",
+          "lot": "LBL-26730",
+          "on_hand": 12775.0,
+          "reserved": 865.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "TAG-HNG",
+          "location": "WH/Stock/Trims Store",
+          "lot": "TAG-26840",
+          "on_hand": 13740.0,
+          "reserved": 492.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "PLY-BAG",
+          "location": "WH/Stock/Packing Store",
+          "lot": "PLY-26550",
+          "on_hand": 12285.0,
+          "reserved": 888.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        },
+        {
+          "item_code": "CTN-5PLY",
+          "location": "WH/Stock/Packing Store",
+          "lot": "CTN-26030",
+          "on_hand": 530.0,
+          "reserved": 17.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "status": "OK"
+        }
+      ]
+    },
+    {
+      "document": "capacity_shift_plan.xlsx",
+      "doc_type": "capacity_shift_plan",
+      "fields": {
+        "ot_proposal": null
+      },
+      "lines": [
+        {
+          "work_centre": "CUT-01",
+          "units": 4,
+          "efficiency": 0.85,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "CUT-02"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "CUT-02",
+          "units": 3,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "LINE-1",
+          "units": 26,
+          "efficiency": 0.62,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "LINE-2",
+            "LINE-3"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "LINE-2",
+          "units": 25,
+          "efficiency": 0.6,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "LINE-1",
+            "LINE-3"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "LINE-3",
+          "units": 22,
+          "efficiency": 0.55,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "LINE-1",
+            "LINE-2"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PACK-01",
+          "units": 12,
+          "efficiency": 0.75,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        }
+      ]
+    },
+    {
+      "document": "hourly_production_report_2026-12-05.xlsx",
+      "doc_type": "production_wip_report",
+      "fields": {
+        "date": "2026-12-05"
+      },
+      "lines": [
+        {
+          "order": "WH/MO/00758",
+          "item": "POLO-PIQ-WHT",
+          "work_centre": "LINE-2",
+          "remaining_qty": 520,
+          "load_minutes": 641.3
+        },
+        {
+          "order": "WH/MO/00491",
+          "item": "TEE-CRW-BLK",
+          "work_centre": "LINE-1",
+          "remaining_qty": 9400,
+          "load_minutes": 5364.8
+        },
+        {
+          "order": "WH/MO/00341",
+          "item": "LEG-LDS-BLK",
+          "work_centre": "LINE-3",
+          "remaining_qty": 4990,
+          "load_minutes": 4701.3
+        }
+      ]
+    },
+    {
+      "document": "maintenance_log.xlsx",
+      "doc_type": "maintenance_log",
+      "fields": {},
+      "lines": [
+        {
+          "work_centre": "LINE-1",
+          "machine": "OL-114 4T overlock",
+          "start": "2026-11-30",
+          "status": "Closed",
+          "unavailable_until_incl": null,
+          "expected_return": null
+        }
+      ]
+    },
+    {
+      "document": "purchase_order_P00866.pdf",
+      "doc_type": "supplier_purchase_order",
+      "fields": {
+        "po_number": "P00866",
+        "supplier_id": "SUP-02",
+        "item_code": "RIB-COL-WHT",
+        "qty": 1200.0,
+        "uom": "pcs",
+        "expected_arrival_printed": "2026-12-07"
+      },
+      "lines": []
+    },
+    {
+      "document": "supplier_invoice_INV-26-6603.pdf",
+      "doc_type": "supplier_tax_invoice",
+      "fields": {
+        "document_no": "INV/26/6603",
+        "supplier_id": "SUP-02",
+        "item_code": "RIB-COL-WHT",
+        "lot": "RIB-26030",
+        "qty": 5532.0,
+        "uom": "pcs",
+        "currency": "LKR",
+        "unit_price": 58.0,
+        "date_of_supply": "2026-12-02"
+      },
+      "lines": []
+    },
+    {
+      "document": "factory_policy_working_hours.pdf",
+      "doc_type": "factory_policy",
+      "fields": {
+        "regular_hours_week": 48,
+        "max_total_hours_week": 60,
+        "max_ot_hours_day": 2,
+        "max_ot_hours_week": 12,
+        "days_off_per_7": 1,
+        "ot_voluntary": true,
+        "ot_premium_pct": 125
+      },
+      "lines": []
+    }
+  ]
+}

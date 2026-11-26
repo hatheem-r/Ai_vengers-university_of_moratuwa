@@ -1,0 +1,3 @@
+Date,Machine ID,Work centre,Machine / part,Breakdown start,Breakdown end,Downtime (h),Category,Reason,Action / remarks,Expected return,Status,Reported by
+21/11/2026,BLD-01,BLD-01,BLD-01 Drum gearbox,09:40,13:28,3.8,Breakdown,Electrical fault,"Contactor replaced, tested OK",,Closed,Shift supervisor
+05/12/2026,FIL-01,FIL-01,FIL-01 Heat sealer jaw assembly,14:15,,,Breakdown,Spare part awaited,"Motor burnt, rewinding at outside workshop",12/12/2026,Open - awaiting repair,Line supervisor

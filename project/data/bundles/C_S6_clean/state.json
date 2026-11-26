@@ -1,0 +1,248 @@
+{
+  "bundle_id": "C_S6_clean",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S6",
+  "scenario_name": "Conflicting documents",
+  "mess": "clean",
+  "seed": 1016,
+  "planning_start": "2026-12-07",
+  "orders": [
+    {
+      "po_no": "PRT9328",
+      "customer_id": "CUS-23",
+      "po_date": "2026-12-01",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "TEA-BOP-200",
+          "qty": 52800,
+          "uom": "pcs",
+          "due_date": "2026-12-19",
+          "unit_price": 2.45
+        }
+      ]
+    }
+  ],
+  "stock": {
+    "BLK-BOP": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26230",
+          "qty": 11831.49,
+          "status": "OK",
+          "received": "2026-11-28",
+          "expiry": "2028-01-31",
+          "received_from": "SUP-21"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26341",
+          "qty": 7887.66,
+          "status": "OK",
+          "received": "2026-11-14",
+          "expiry": "2027-09-26"
+        },
+        {
+          "location": "Quality Hold Godown",
+          "lot": "RT-5120",
+          "qty": 200.0,
+          "status": "QC HOLD",
+          "expiry": "2027-06-25",
+          "received": "2026-11-28"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BLK-GRN": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26420",
+          "qty": 348.95,
+          "status": "OK",
+          "received": "2026-11-12",
+          "expiry": "2027-09-02"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26301",
+          "qty": 232.64,
+          "status": "OK",
+          "received": "2026-11-12",
+          "expiry": "2027-08-27"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26230",
+          "qty": 1897.93,
+          "status": "OK",
+          "received": "2026-11-21",
+          "expiry": "2027-08-03"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26430",
+          "qty": 17954.9,
+          "status": "OK",
+          "received": "2026-11-12",
+          "expiry": "2027-10-13"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26420",
+          "qty": 14666.0,
+          "status": "OK",
+          "received": "2026-11-12",
+          "expiry": "2028-03-21"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26240",
+          "qty": 89057.0,
+          "status": "OK",
+          "received": "2026-10-31",
+          "expiry": "2027-11-16"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-GRN-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26230",
+          "qty": 17118.0,
+          "status": "OK",
+          "received": "2026-11-22",
+          "expiry": "2027-09-11"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-48": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26090",
+          "qty": 881.0,
+          "status": "OK",
+          "received": "2026-11-15",
+          "expiry": "2027-10-22"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-24": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26560",
+          "qty": 3650.0,
+          "status": "OK",
+          "received": "2026-11-07",
+          "expiry": "2027-07-28"
+        }
+      ],
+      "reserved": 0.0
+    }
+  },
+  "open_pos": [
+    {
+      "po_no": "PO/814/26-27",
+      "supplier_id": "SUP-24",
+      "order_date": "2026-12-02",
+      "eta": "2026-12-07",
+      "eta_printed": "2026-12-07",
+      "lines": [
+        {
+          "item": "CTN-24",
+          "qty": 700.0,
+          "price": 150.0
+        }
+      ]
+    }
+  ],
+  "downtime": [],
+  "maintenance_noise": [
+    {
+      "wc": "FIL-02",
+      "machine": "FIL-02 Auger filler motor",
+      "start": "2026-11-26",
+      "end": null,
+      "hours": 2.7,
+      "reason": "Electrical fault",
+      "status": "Closed",
+      "remarks": "Contactor replaced, tested OK"
+    }
+  ],
+  "wip": [
+    {
+      "wo": "MJ/525",
+      "item": "TEA-BOP-200",
+      "wc": "FIL-01",
+      "remaining_qty": 3550,
+      "minutes": 159.8,
+      "done_qty": 5260,
+      "customer": "CUS-22"
+    },
+    {
+      "wo": "MJ/387",
+      "item": "TEA-GRN-100",
+      "wc": "FIL-02",
+      "remaining_qty": 10950,
+      "minutes": 505.4,
+      "done_qty": 15130,
+      "customer": "CUS-23"
+    }
+  ],
+  "conflicts": [
+    {
+      "kind": "receipt_mismatch",
+      "item": "BLK-BOP",
+      "lot": "BLK-26230",
+      "stock_report_qty": 12031.49,
+      "delivery_note_qty": 11831.49,
+      "truth": "delivery_note",
+      "expected_resolution": "Use the lower, delivered quantity and ask stores to recount the lot."
+    }
+  ],
+  "events": [],
+  "policy": {
+    "regular_hours_week": 48,
+    "max_total_hours_week": 60,
+    "max_ot_hours_day": 2,
+    "max_ot_hours_week": 12,
+    "days_off_per_7": 1,
+    "ot_voluntary": true,
+    "ot_premium_pct": 125
+  },
+  "ot_proposal": null,
+  "defects": [],
+  "layouts": {
+    "customer_po": 2,
+    "supplier_invoice": 2
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "C_S1_messy",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-07",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "TEA-GRN-100",
+      "qty": 28800,
+      "uom": "pcs",
+      "customer_po": "PRT6413",
+      "variant": null,
+      "bom_version": "G-2026",
+      "priority": 1,
+      "due_date": "2026-12-14",
+      "planned_start": "2026-12-07T08:00:00+05:30",
+      "planned_finish": "2026-12-10T14:54:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Blending",
+          "machine_id": "BLD-01",
+          "start": "2026-12-07T08:00:00+05:30",
+          "end": "2026-12-07T15:24:00+05:30",
+          "qty": 28800,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Filling and sealing",
+          "machine_id": "FIL-01",
+          "start": "2026-12-07T16:39:00+05:30",
+          "end": "2026-12-10T10:39:00+05:30",
+          "qty": 28800,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Carton packing",
+          "machine_id": "PKG-01",
+          "start": "2026-12-10T10:39:00+05:30",
+          "end": "2026-12-10T14:54:00+05:30",
+          "qty": 28800,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "BLK-GRN",
+      "uom": "kg",
+      "required_qty": 2937.6,
+      "on_hand_qty": 6326.92,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "BOX-GRN-100",
+      "uom": "pcs",
+      "required_qty": 29088.0,
+      "on_hand_qty": 59439.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-48",
+      "uom": "pcs",
+      "required_qty": 600.0,
+      "on_hand_qty": 951.0,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FLM-INR-100",
+      "uom": "m",
+      "required_qty": 4746.24,
+      "on_hand_qty": 6826.59,
+      "reserved_qty": 0.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [],
+  "suggested_pos": [],
+  "flags": [],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": []
+}

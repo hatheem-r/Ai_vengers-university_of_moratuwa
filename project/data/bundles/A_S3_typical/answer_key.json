@@ -1,0 +1,261 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "A_S3_typical",
+  "system_id": "answer_key",
+  "created_at": "2026-11-21T12:00:00+05:30",
+  "planning_start": "2026-12-14",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "POLO-PIQ-NVY",
+      "qty": 3360,
+      "uom": "pcs",
+      "customer_po": "450001456",
+      "variant": {
+        "colour": "Navy",
+        "sizes": {
+          "S": 336,
+          "M": 1008,
+          "L": 1008,
+          "XL": 672,
+          "XXL": 336
+        }
+      },
+      "bom_version": "v3",
+      "priority": 1,
+      "due_date": "2027-01-01",
+      "planned_start": "2026-12-18T08:00:00+05:30",
+      "planned_finish": "2026-12-31T17:09:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-12-18T08:00:00+05:30",
+          "end": "2026-12-19T14:49:00+05:30",
+          "qty": 3360,
+          "uses_overtime": true
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-1",
+          "start": "2026-12-19T14:49:00+05:30",
+          "end": "2026-12-30T10:05:00+05:30",
+          "qty": 3360,
+          "uses_overtime": true
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-30T10:05:00+05:30",
+          "end": "2026-12-31T17:09:00+05:30",
+          "qty": 3360,
+          "uses_overtime": true
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "BTN-4H-15L",
+      "uom": "pcs",
+      "required_qty": 10383.0,
+      "on_hand_qty": 15342.0,
+      "reserved_qty": 888.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "CTN-5PLY",
+      "uom": "pcs",
+      "required_qty": 140.0,
+      "on_hand_qty": 224.0,
+      "reserved_qty": 24.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "required_qty": 899.64,
+      "on_hand_qty": 722.92,
+      "reserved_qty": 136.26,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 312.98,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-CARE",
+      "uom": "pcs",
+      "required_qty": 3394.0,
+      "on_hand_qty": 6558.0,
+      "reserved_qty": 380.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "LBL-MAIN",
+      "uom": "pcs",
+      "required_qty": 3394.0,
+      "on_hand_qty": 5078.0,
+      "reserved_qty": 246.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "PLY-BAG",
+      "uom": "pcs",
+      "required_qty": 3394.0,
+      "on_hand_qty": 6690.0,
+      "reserved_qty": 385.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "RIB-COL-NVY",
+      "uom": "pcs",
+      "required_qty": 3428.0,
+      "on_hand_qty": 7892.0,
+      "reserved_qty": 581.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "TAG-HNG",
+      "uom": "pcs",
+      "required_qty": 3394.0,
+      "on_hand_qty": 6287.0,
+      "reserved_qty": 229.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    },
+    {
+      "item_code": "THR-PL-40",
+      "uom": "cone",
+      "required_qty": 106.0,
+      "on_hand_qty": 198.0,
+      "reserved_qty": 19.0,
+      "on_order_qty": 0.0,
+      "net_shortage_qty": 0,
+      "for_work_orders": [
+        "WO-001"
+      ]
+    }
+  ],
+  "shortages": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "shortfall_qty": 312.98,
+      "need_by": "2026-12-14",
+      "affected_work_orders": [
+        "WO-001"
+      ],
+      "cause": "insufficient_stock"
+    }
+  ],
+  "suggested_pos": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "qty": 325,
+      "uom": "kg",
+      "supplier_id": "SUP-03",
+      "need_by": "2026-12-14",
+      "expedite": true,
+      "reason": "Covers the 312.98 kg shortfall; Colombo Fabric Traders lead time is 3 working days.",
+      "expected_usable_date": "2026-12-18"
+    }
+  ],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "shortage",
+      "severity": "high",
+      "message": "Pique knit fabric 220 gsm, Navy is 312.98 kg short for WO-001.",
+      "sources": [
+        {
+          "document": "stock_on_hand_odoo.xlsx",
+          "field": "on_hand",
+          "value": null,
+          "page": null,
+          "row": 2
+        },
+        {
+          "document": "bom_techpack.xlsx",
+          "field": "qty_per_unit",
+          "value": null,
+          "page": null,
+          "row": 11
+        }
+      ],
+      "needs_human": false,
+      "resolution": "Suggested PO raised; affected work order starts after the material is usable.",
+      "required": true
+    },
+    {
+      "flag_id": "F2",
+      "type": "needs_approval",
+      "severity": "low",
+      "message": "Plan uses overtime within policy (max 2 h/day) on CUT-01, LINE-1, PACK-01.",
+      "sources": [
+        {
+          "document": "factory_policy_working_hours.pdf",
+          "field": "max_ot_hours_day",
+          "value": 2,
+          "page": 1,
+          "row": null
+        }
+      ],
+      "needs_human": true,
+      "resolution": null,
+      "required": false
+    }
+  ],
+  "assumptions": [
+    "Solver rules: see data/generator/solver.py docstring.",
+    "One 8 h shift Mon-Sat; overtime max 2 h/day only where it reduces lateness.",
+    "Goods received on day D are usable from the next working day.",
+    "Quality-hold stock is not available."
+  ],
+  "rationale": "Reference plan computed by solver.py (EDD sequencing, finite capacity, BoM netting). Several valid schedules exist; score schedules on feasibility and lateness, not on exact times.",
+  "checker": null,
+  "scoring_notes": {
+    "qty": "exact after unit normalisation (kg/m to 0.01, countable items to whole units)",
+    "dates": "within +-1 working day",
+    "schedule": "feasibility: no double-booked work centre, no op before material is usable, no op on a down work centre",
+    "flags": "required=true flags must be found; required=false flags are optional and not penalised",
+    "item_aliases": "names and buyer article numbers map to item codes via extraction_key.json"
+  },
+  "ot_work_centres": [
+    "CUT-01",
+    "LINE-1",
+    "PACK-01"
+  ]
+}

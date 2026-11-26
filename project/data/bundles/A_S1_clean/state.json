@@ -1,0 +1,392 @@
+{
+  "bundle_id": "A_S1_clean",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S1",
+  "scenario_name": "Normal order",
+  "mess": "clean",
+  "seed": 1000,
+  "planning_start": "2026-12-07",
+  "orders": [
+    {
+      "po_no": "450009009",
+      "customer_id": "CUS-02",
+      "po_date": "2026-11-28",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "POLO-PIQ-NVY",
+          "qty": 1920,
+          "uom": "pcs",
+          "due_date": "2026-12-16",
+          "unit_price": 6.85,
+          "colour": "Navy",
+          "sizes": {
+            "S": 192,
+            "M": 576,
+            "L": 576,
+            "XL": 384,
+            "XXL": 192
+          },
+          "style": "SC-POLO-261"
+        }
+      ]
+    },
+    {
+      "po_no": "NWO-PO-8504",
+      "customer_id": "CUS-01",
+      "po_date": "2026-12-03",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "POLO-PIQ-NVY",
+          "qty": 1800,
+          "uom": "pcs",
+          "due_date": "2026-12-19",
+          "unit_price": 6.85,
+          "colour": "Navy",
+          "sizes": {
+            "S": 180,
+            "M": 540,
+            "L": 540,
+            "XL": 360,
+            "XXL": 180
+          },
+          "style": "SC-POLO-261"
+        }
+      ]
+    }
+  ],
+  "stock": {
+    "FAB-PIQ-NVY": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26180",
+          "qty": 1278.07,
+          "status": "OK",
+          "received": "2026-11-05"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26911",
+          "qty": 852.04,
+          "status": "OK",
+          "received": "2026-11-08"
+        }
+      ],
+      "reserved": 151.18
+    },
+    "FAB-PIQ-WHT": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26680",
+          "qty": 102.73,
+          "status": "OK",
+          "received": "2026-11-05"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26911",
+          "qty": 68.49,
+          "status": "OK",
+          "received": "2026-11-21"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FAB-SJ-BLK": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26890",
+          "qty": 224.96,
+          "status": "OK",
+          "received": "2026-11-28"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26321",
+          "qty": 149.98,
+          "status": "OK",
+          "received": "2026-11-24"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FAB-SJ-GRY": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26400",
+          "qty": 128.6,
+          "status": "OK",
+          "received": "2026-12-03"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26811",
+          "qty": 85.74,
+          "status": "OK",
+          "received": "2026-11-18"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FAB-SPX-BLK": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26980",
+          "qty": 161.17,
+          "status": "OK",
+          "received": "2026-10-30"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "FAB-26151",
+          "qty": 107.45,
+          "status": "OK",
+          "received": "2026-11-22"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "RIB-COL-NVY": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "RIB-26840",
+          "qty": 7058.0,
+          "status": "OK",
+          "received": "2026-11-20"
+        }
+      ],
+      "reserved": 706.0
+    },
+    "RIB-COL-WHT": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "RIB-26620",
+          "qty": 827.0,
+          "status": "OK",
+          "received": "2026-11-27"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "RIB-1X1-BLK": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26460",
+          "qty": 30.05,
+          "status": "OK",
+          "received": "2026-11-03"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26761",
+          "qty": 20.04,
+          "status": "OK",
+          "received": "2026-11-17"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "RIB-1X1-GRY": {
+      "lots": [
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26010",
+          "qty": 44.0,
+          "status": "OK",
+          "received": "2026-12-01"
+        },
+        {
+          "location": "WH/Stock/Fabric Store",
+          "lot": "RIB-26181",
+          "qty": 29.33,
+          "status": "OK",
+          "received": "2026-11-06"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BTN-4H-15L": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "BTN-26370",
+          "qty": 17950.0,
+          "status": "OK",
+          "received": "2026-12-03"
+        }
+      ],
+      "reserved": 1699.0
+    },
+    "ELS-30MM": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "ELS-26170",
+          "qty": 510.1,
+          "status": "OK",
+          "received": "2026-11-02"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "THR-PL-40": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "THR-26430",
+          "qty": 269.0,
+          "status": "OK",
+          "received": "2026-11-16"
+        }
+      ],
+      "reserved": 21.0
+    },
+    "LBL-MAIN": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "LBL-26870",
+          "qty": 7907.0,
+          "status": "OK",
+          "received": "2026-11-22"
+        }
+      ],
+      "reserved": 615.0
+    },
+    "LBL-CARE": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "LBL-26090",
+          "qty": 7043.0,
+          "status": "OK",
+          "received": "2026-11-20"
+        }
+      ],
+      "reserved": 696.0
+    },
+    "TAG-HNG": {
+      "lots": [
+        {
+          "location": "WH/Stock/Trims Store",
+          "lot": "TAG-26380",
+          "qty": 6557.0,
+          "status": "OK",
+          "received": "2026-11-08"
+        }
+      ],
+      "reserved": 713.0
+    },
+    "PLY-BAG": {
+      "lots": [
+        {
+          "location": "WH/Stock/Packing Store",
+          "lot": "PLY-26750",
+          "qty": 5732.0,
+          "status": "OK",
+          "received": "2026-11-24"
+        }
+      ],
+      "reserved": 639.0
+    },
+    "CTN-5PLY": {
+      "lots": [
+        {
+          "location": "WH/Stock/Packing Store",
+          "lot": "CTN-26780",
+          "qty": 273.0,
+          "status": "OK",
+          "received": "2026-11-05"
+        }
+      ],
+      "reserved": 10.0
+    }
+  },
+  "open_pos": [
+    {
+      "po_no": "P00941",
+      "supplier_id": "SUP-02",
+      "order_date": "2026-11-30",
+      "eta": "2026-12-08",
+      "eta_printed": "2026-12-08",
+      "lines": [
+        {
+          "item": "TAG-HNG",
+          "qty": 2000.0,
+          "price": 6.5
+        }
+      ]
+    }
+  ],
+  "downtime": [],
+  "maintenance_noise": [
+    {
+      "wc": "LINE-1",
+      "machine": "OL-114 4T overlock",
+      "start": "2026-11-23",
+      "end": null,
+      "hours": 1.7,
+      "reason": "Electrical fault",
+      "status": "Closed",
+      "remarks": "Contactor replaced, tested OK"
+    }
+  ],
+  "wip": [
+    {
+      "wo": "WH/MO/00348",
+      "item": "TEE-CRW-GRY",
+      "wc": "LINE-1",
+      "remaining_qty": 1170,
+      "minutes": 667.7,
+      "done_qty": 410,
+      "customer": "CUS-01"
+    },
+    {
+      "wo": "WH/MO/00504",
+      "item": "POLO-PIQ-WHT",
+      "wc": "LINE-2",
+      "remaining_qty": 210,
+      "minutes": 259.0,
+      "done_qty": 280,
+      "customer": "CUS-01"
+    },
+    {
+      "wo": "WH/MO/00514",
+      "item": "LEG-LDS-BLK",
+      "wc": "LINE-3",
+      "remaining_qty": 190,
+      "minutes": 179.0,
+      "done_qty": 180,
+      "customer": "CUS-01"
+    }
+  ],
+  "conflicts": [],
+  "events": [],
+  "policy": {
+    "regular_hours_week": 48,
+    "max_total_hours_week": 60,
+    "max_ot_hours_day": 2,
+    "max_ot_hours_week": 12,
+    "days_off_per_7": 1,
+    "ot_voluntary": true,
+    "ot_premium_pct": 125
+  },
+  "ot_proposal": null,
+  "defects": [],
+  "layouts": {
+    "customer_po": 1,
+    "supplier_invoice": 2
+  }
+}

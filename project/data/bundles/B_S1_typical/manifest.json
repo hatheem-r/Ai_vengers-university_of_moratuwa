@@ -1,0 +1,105 @@
+{
+  "bundle_id": "B_S1_typical",
+  "set": "test",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S1",
+  "scenario_name": "Normal order",
+  "mess_level": "typical",
+  "seed": 1008,
+  "n_documents": 10,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_sapb1_export.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6426,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7669,
+      "pages": null
+    },
+    {
+      "name": "customer_po_AOI-PO-2026-9789.pdf",
+      "type": "pdf",
+      "size_bytes": 2910,
+      "pages": 1
+    },
+    {
+      "name": "daily_production_report_2026-12-12.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5368,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2497,
+      "pages": 1
+    },
+    {
+      "name": "inventory_status_report.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6219,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5411,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_425.pdf",
+      "type": "pdf",
+      "size_bytes": 2754,
+      "pages": 1
+    },
+    {
+      "name": "routing_sapb1_stages.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5460,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-4092.pdf",
+      "type": "pdf",
+      "size_bytes": 2948,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "names_not_codes",
+    "title_block",
+    "blank_noncritical"
+  ],
+  "defects_applied": [
+    {
+      "defect": "names_not_codes",
+      "document": "inventory_status_report.xlsx",
+      "detail": "item code column removed; only names shown"
+    },
+    {
+      "defect": "title_block",
+      "document": "inventory_status_report.xlsx",
+      "detail": "report title rows above the header"
+    },
+    {
+      "defect": "blank_noncritical",
+      "document": "inventory_status_report.xlsx",
+      "detail": {
+        "row": 7,
+        "column": "Warehouse"
+      }
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-14"
+}

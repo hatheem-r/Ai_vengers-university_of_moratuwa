@@ -1,0 +1,125 @@
+{
+  "bundle_id": "dev_B_S3_typical",
+  "set": "dev",
+  "profile": "B",
+  "profile_name": "Light assembly (steel furniture)",
+  "scenario": "S3",
+  "scenario_name": "Material shortage",
+  "mess_level": "typical",
+  "seed": 11,
+  "n_documents": 10,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_sapb1_export.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6426,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7574,
+      "pages": null
+    },
+    {
+      "name": "customer_po_MWS7490.pdf",
+      "type": "pdf",
+      "size_bytes": 2926,
+      "pages": 1
+    },
+    {
+      "name": "daily_production_report_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5159,
+      "pages": null
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2497,
+      "pages": 1
+    },
+    {
+      "name": "inventory_status_report.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6192,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5414,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_839.pdf",
+      "type": "pdf",
+      "size_bytes": 2747,
+      "pages": 1
+    },
+    {
+      "name": "routing_sapb1_stages.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5460,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-3374.pdf",
+      "type": "pdf",
+      "size_bytes": 3109,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "mixed_currency",
+    "unit_variant",
+    "blank_noncritical",
+    "dmy_dates"
+  ],
+  "defects_applied": [
+    {
+      "defect": "dmy_dates",
+      "document": "capacity_shift_plan.xlsx + customer POs",
+      "detail": "dates written as DD/MM/YYYY text"
+    },
+    {
+      "defect": "unit_variant",
+      "document": "inventory_status_report.xlsx",
+      "detail": {
+        "SCR-M6-20": {
+          "shown_uom": "Box (100)",
+          "base_per_shown": 100
+        },
+        "BLT-M8-16": {
+          "shown_uom": "Box (100)",
+          "base_per_shown": 100
+        }
+      }
+    },
+    {
+      "defect": "blank_noncritical",
+      "document": "inventory_status_report.xlsx",
+      "detail": {
+        "row": 2,
+        "column": "Warehouse"
+      }
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_INV-26-3374.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "shortage",
+      "item": "CST-50"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

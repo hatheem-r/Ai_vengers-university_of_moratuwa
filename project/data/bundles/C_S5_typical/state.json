@@ -1,0 +1,264 @@
+{
+  "bundle_id": "C_S5_typical",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S5",
+  "scenario_name": "Supplier delay",
+  "mess": "typical",
+  "seed": 1015,
+  "planning_start": "2026-11-30",
+  "orders": [
+    {
+      "po_no": "PRT6408",
+      "customer_id": "CUS-23",
+      "po_date": "2026-11-23",
+      "rush": false,
+      "lines": [
+        {
+          "line_no": 1,
+          "item_code": "TEA-BOP-200",
+          "qty": 72000,
+          "uom": "pcs",
+          "due_date": "2026-12-14",
+          "unit_price": 2.45
+        }
+      ]
+    }
+  ],
+  "stock": {
+    "BLK-BOP": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26380",
+          "qty": 17191.58,
+          "status": "OK",
+          "received": "2026-11-25",
+          "expiry": "2027-07-25"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26781",
+          "qty": 11461.05,
+          "status": "OK",
+          "received": "2026-11-03",
+          "expiry": "2028-01-26"
+        },
+        {
+          "location": "Quality Hold Godown",
+          "lot": "RT-5192",
+          "qty": 350.0,
+          "status": "QC HOLD",
+          "expiry": "2027-06-18",
+          "received": "2026-11-21"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BLK-GRN": {
+      "lots": [
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26540",
+          "qty": 126.68,
+          "status": "OK",
+          "received": "2026-11-09",
+          "expiry": "2028-01-27"
+        },
+        {
+          "location": "Main Godown",
+          "lot": "BLK-26561",
+          "qty": 84.46,
+          "status": "OK",
+          "received": "2026-10-23",
+          "expiry": "2028-01-22"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26260",
+          "qty": 4919.33,
+          "status": "OK",
+          "received": "2026-11-01",
+          "expiry": "2027-06-04"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "FLM-INR-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "FLM-26230",
+          "qty": 22435.27,
+          "status": "OK",
+          "received": "2026-10-25",
+          "expiry": "2027-12-26"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26010",
+          "qty": 3365.0,
+          "status": "OK",
+          "received": "2026-11-22",
+          "expiry": "2027-07-21"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-BOP-200": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26040",
+          "qty": 22913.0,
+          "status": "OK",
+          "received": "2026-10-28",
+          "expiry": "2027-06-05"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "BOX-GRN-100": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "BOX-26480",
+          "qty": 5247.0,
+          "status": "OK",
+          "received": "2026-10-28",
+          "expiry": "2027-10-13"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-48": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26430",
+          "qty": 1118.0,
+          "status": "OK",
+          "received": "2026-11-19",
+          "expiry": "2028-01-11"
+        }
+      ],
+      "reserved": 0.0
+    },
+    "CTN-24": {
+      "lots": [
+        {
+          "location": "Packing Material Store",
+          "lot": "CTN-26660",
+          "qty": 6297.0,
+          "status": "OK",
+          "received": "2026-11-25",
+          "expiry": "2028-03-07"
+        }
+      ],
+      "reserved": 0.0
+    }
+  },
+  "open_pos": [
+    {
+      "po_no": "PO/465/26-27",
+      "supplier_id": "SUP-24",
+      "order_date": "2026-11-25",
+      "eta": "2026-11-30",
+      "eta_printed": "2026-11-30",
+      "lines": [
+        {
+          "item": "CTN-24",
+          "qty": 900.0,
+          "price": 150.0
+        }
+      ]
+    },
+    {
+      "po_no": "PO/421/26-27",
+      "supplier_id": "SUP-23",
+      "order_date": "2026-11-20",
+      "eta": "2026-12-09",
+      "eta_printed": "2026-12-01",
+      "lines": [
+        {
+          "item": "BOX-BOP-200",
+          "qty": 62000.0,
+          "price": 24.0
+        }
+      ]
+    }
+  ],
+  "downtime": [],
+  "maintenance_noise": [
+    {
+      "wc": "FIL-01",
+      "machine": "FIL-01 Heat sealer jaw assembly",
+      "start": "2026-11-20",
+      "end": null,
+      "hours": 4.6,
+      "reason": "Electrical fault",
+      "status": "Closed",
+      "remarks": "Contactor replaced, tested OK"
+    }
+  ],
+  "wip": [
+    {
+      "wo": "MJ/875",
+      "item": "TEA-BOP-200",
+      "wc": "FIL-01",
+      "remaining_qty": 15880,
+      "minutes": 714.6,
+      "done_qty": 7480,
+      "customer": "CUS-23"
+    },
+    {
+      "wo": "MJ/736",
+      "item": "TEA-GRN-100",
+      "wc": "FIL-02",
+      "remaining_qty": 9660,
+      "minutes": 445.8,
+      "done_qty": 11540,
+      "customer": "CUS-21"
+    }
+  ],
+  "conflicts": [],
+  "events": [
+    {
+      "type": "supplier_delay",
+      "item": "BOX-BOP-200",
+      "po_no": "PO/421/26-27",
+      "old_eta": "2026-12-01",
+      "new_eta": "2026-12-09",
+      "reason": "customs inspection hold on raw material"
+    }
+  ],
+  "policy": {
+    "regular_hours_week": 48,
+    "max_total_hours_week": 60,
+    "max_ot_hours_day": 2,
+    "max_ot_hours_week": 12,
+    "days_off_per_7": 1,
+    "ot_voluntary": true,
+    "ot_premium_pct": 125
+  },
+  "ot_proposal": null,
+  "defects": [
+    "unit_variant",
+    "notes_column",
+    "mixed_currency"
+  ],
+  "layouts": {
+    "customer_po": 2,
+    "supplier_invoice": 2
+  }
+}

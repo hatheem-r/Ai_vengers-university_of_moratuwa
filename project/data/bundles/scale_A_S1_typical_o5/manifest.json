@@ -1,0 +1,149 @@
+{
+  "bundle_id": "scale_A_S1_typical_o5",
+  "set": "scale",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S1",
+  "scenario_name": "Normal order",
+  "mess_level": "typical",
+  "seed": 21,
+  "n_documents": 15,
+  "n_orders": 5,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 10364,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7257,
+      "pages": null
+    },
+    {
+      "name": "customer_po_KSW-26-2897.pdf",
+      "type": "pdf",
+      "size_bytes": 3259,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_KSW-26-7664.pdf",
+      "type": "pdf",
+      "size_bytes": 3249,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-3536.pdf",
+      "type": "pdf",
+      "size_bytes": 3295,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-4812.pdf",
+      "type": "pdf",
+      "size_bytes": 3300,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_NWO-PO-6389.pdf",
+      "type": "pdf",
+      "size_bytes": 3275,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-11-28.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6600,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5416,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 9047,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00463.pdf",
+      "type": "pdf",
+      "size_bytes": 2749,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5612,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6340,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_INV-26-2929.pdf",
+      "type": "pdf",
+      "size_bytes": 2945,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "blank_noncritical",
+    "unit_variant",
+    "names_not_codes"
+  ],
+  "defects_applied": [
+    {
+      "defect": "names_not_codes",
+      "document": "bom_techpack.xlsx",
+      "detail": "item code column removed from tech pack BoM"
+    },
+    {
+      "defect": "unit_variant",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "BTN-4H-15L": {
+          "shown_uom": "Gross",
+          "base_per_shown": 144
+        },
+        "LBL-MAIN": {
+          "shown_uom": "Thousand",
+          "base_per_shown": 1000
+        }
+      }
+    },
+    {
+      "defect": "names_not_codes",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "item code column removed; only names shown"
+    },
+    {
+      "defect": "blank_noncritical",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": {
+        "row": 2,
+        "column": "Location"
+      }
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-11-30"
+}

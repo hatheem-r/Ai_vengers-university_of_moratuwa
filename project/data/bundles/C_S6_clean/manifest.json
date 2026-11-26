@@ -1,0 +1,92 @@
+{
+  "bundle_id": "C_S6_clean",
+  "set": "test",
+  "profile": "C",
+  "profile_name": "Food packer (tea)",
+  "scenario": "S6",
+  "scenario_name": "Conflicting documents",
+  "mess_level": "clean",
+  "seed": 1016,
+  "n_documents": 10,
+  "n_orders": 1,
+  "has_answer_key": true,
+  "human_baseline": true,
+  "files": [
+    {
+      "name": "bom_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5512,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7264,
+      "pages": null
+    },
+    {
+      "name": "customer_po_PRT9328.pdf",
+      "type": "pdf",
+      "size_bytes": 2950,
+      "pages": 1
+    },
+    {
+      "name": "daily_packing_log_2026-12-05.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5459,
+      "pages": null
+    },
+    {
+      "name": "delivery_note_DN-26-2507.pdf",
+      "type": "pdf",
+      "size_bytes": 2834,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2494,
+      "pages": 1
+    },
+    {
+      "name": "godown_summary_tally.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6280,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.csv",
+      "type": "csv",
+      "size_bytes": 307,
+      "pages": null
+    },
+    {
+      "name": "process_sheet.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5482,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_PO-814-26-27.pdf",
+      "type": "pdf",
+      "size_bytes": 2752,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [],
+  "defects_applied": [],
+  "planted_conflicts": [
+    {
+      "kind": "receipt_mismatch",
+      "item": "BLK-BOP",
+      "lot": "BLK-26230",
+      "stock_report_qty": 12031.49,
+      "delivery_note_qty": 11831.49,
+      "truth": "delivery_note",
+      "expected_resolution": "Use the lower, delivered quantity and ask stores to recount the lot."
+    }
+  ],
+  "scenario_events": [],
+  "generator_version": "1.0",
+  "planning_start": "2026-12-07"
+}

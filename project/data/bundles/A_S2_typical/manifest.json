@@ -1,0 +1,113 @@
+{
+  "bundle_id": "A_S2_typical",
+  "set": "test",
+  "profile": "A",
+  "profile_name": "Apparel export (cut-make-trim)",
+  "scenario": "S2",
+  "scenario_name": "Rush order",
+  "mess_level": "typical",
+  "seed": 1001,
+  "n_documents": 12,
+  "n_orders": 2,
+  "has_answer_key": true,
+  "human_baseline": false,
+  "files": [
+    {
+      "name": "bom_techpack.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6144,
+      "pages": null
+    },
+    {
+      "name": "capacity_shift_plan.xlsx",
+      "type": "xlsx",
+      "size_bytes": 7487,
+      "pages": null
+    },
+    {
+      "name": "customer_po_450003444.pdf",
+      "type": "pdf",
+      "size_bytes": 3316,
+      "pages": 1
+    },
+    {
+      "name": "customer_po_KSW-26-4072.pdf",
+      "type": "pdf",
+      "size_bytes": 3244,
+      "pages": 1
+    },
+    {
+      "name": "factory_policy_working_hours.pdf",
+      "type": "pdf",
+      "size_bytes": 2518,
+      "pages": 1
+    },
+    {
+      "name": "hourly_production_report_2026-11-28.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6590,
+      "pages": null
+    },
+    {
+      "name": "maintenance_log.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5416,
+      "pages": null
+    },
+    {
+      "name": "operation_bulletin.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6198,
+      "pages": null
+    },
+    {
+      "name": "purchase_order_P00484.pdf",
+      "type": "pdf",
+      "size_bytes": 2739,
+      "pages": 1
+    },
+    {
+      "name": "routing_odoo_operations.xlsx",
+      "type": "xlsx",
+      "size_bytes": 5362,
+      "pages": null
+    },
+    {
+      "name": "stock_on_hand_odoo.xlsx",
+      "type": "xlsx",
+      "size_bytes": 6806,
+      "pages": null
+    },
+    {
+      "name": "supplier_invoice_TI-26-7607.pdf",
+      "type": "pdf",
+      "size_bytes": 2978,
+      "pages": 1
+    }
+  ],
+  "defects_selected": [
+    "mixed_currency",
+    "title_block"
+  ],
+  "defects_applied": [
+    {
+      "defect": "title_block",
+      "document": "stock_on_hand_odoo.xlsx",
+      "detail": "report title rows above the header"
+    },
+    {
+      "defect": "mixed_currency",
+      "document": "supplier_invoice_TI-26-7607.pdf",
+      "detail": "invoice priced in USD while the rest of the bundle is in LKR"
+    }
+  ],
+  "planted_conflicts": [],
+  "scenario_events": [
+    {
+      "type": "rush_order",
+      "po_no": "450003444"
+    }
+  ],
+  "generator_version": "1.0",
+  "planning_start": "2026-11-30"
+}

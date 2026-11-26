@@ -1,0 +1,419 @@
+{
+  "bundle_id": "C_S8_messy",
+  "documents": [
+    {
+      "document": "customer_po_GPF-PO-8651.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "GPF-PO-8651",
+        "po_date": "2026-11-26",
+        "customer": "Gulf Pearl Foodstuff Trading LLC",
+        "currency": "USD",
+        "delivery_date": "2026-12-16",
+        "lines": [
+          {
+            "item_code": "TEA-BOP-200",
+            "buyer_ref": "SKU2058",
+            "qty": 43200,
+            "uom": "pcs",
+            "unit_price": 2.45,
+            "sizes": null
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "TEA-BOP-200",
+          "buyer_ref": "SKU2058",
+          "qty": 43200,
+          "uom": "pcs",
+          "unit_price": 2.45,
+          "sizes": null
+        }
+      ]
+    },
+    {
+      "document": "customer_po_GPF-PO-9220.pdf",
+      "doc_type": "customer_po",
+      "fields": {
+        "po_number": "GPF-PO-9220",
+        "po_date": "2026-12-01",
+        "customer": "Gulf Pearl Foodstuff Trading LLC",
+        "currency": "USD",
+        "delivery_date": "2026-12-18",
+        "lines": [
+          {
+            "item_code": "TEA-BOP-200",
+            "buyer_ref": "SKU2058",
+            "qty": 31200,
+            "uom": "pcs",
+            "unit_price": 2.45,
+            "sizes": null
+          }
+        ]
+      },
+      "lines": [
+        {
+          "item_code": "TEA-BOP-200",
+          "buyer_ref": "SKU2058",
+          "qty": 31200,
+          "uom": "pcs",
+          "unit_price": 2.45,
+          "sizes": null
+        }
+      ]
+    },
+    {
+      "document": "bom_tally.xlsx",
+      "doc_type": "bill_of_materials",
+      "fields": {
+        "products": [
+          "TEA-BOP-200"
+        ]
+      },
+      "lines": [
+        {
+          "parent": "TEA-BOP-200",
+          "component": "BLK-BOP",
+          "qty_per_1000_incl_loss": 203.0,
+          "uom": "kg",
+          "qty_per": 0.2,
+          "wastage_pct": 1.5
+        },
+        {
+          "parent": "TEA-BOP-200",
+          "component": "FLM-INR-200",
+          "qty_per_1000_incl_loss": 216.3,
+          "uom": "m",
+          "qty_per": 0.21,
+          "wastage_pct": 3
+        },
+        {
+          "parent": "TEA-BOP-200",
+          "component": "BOX-BOP-200",
+          "qty_per_1000_incl_loss": 1010.0,
+          "uom": "pcs",
+          "qty_per": 1,
+          "wastage_pct": 1
+        },
+        {
+          "parent": "TEA-BOP-200",
+          "component": "CTN-24",
+          "qty_per_1000_incl_loss": 41.6667,
+          "uom": "pcs",
+          "qty_per": 0.041666666666666664,
+          "wastage_pct": 0
+        }
+      ]
+    },
+    {
+      "document": "process_sheet.xlsx",
+      "doc_type": "routing",
+      "fields": {},
+      "lines": [
+        {
+          "item": "TEA-BOP-200",
+          "seq": 10,
+          "operation": "Blending",
+          "work_centre": "BLD-01",
+          "std_min_per_unit": 0.018,
+          "rated_units_per_min": 55.56,
+          "setup_min": 30
+        },
+        {
+          "item": "TEA-BOP-200",
+          "seq": 20,
+          "operation": "Filling and sealing",
+          "work_centre": "FIL-01",
+          "std_min_per_unit": 0.036,
+          "rated_units_per_min": 27.78,
+          "setup_min": 60
+        },
+        {
+          "item": "TEA-BOP-200",
+          "seq": 30,
+          "operation": "Carton packing",
+          "work_centre": "PKG-01",
+          "std_min_per_unit": 0.025,
+          "rated_units_per_min": 40.0,
+          "setup_min": 15
+        }
+      ]
+    },
+    {
+      "document": "godown_summary_tally.xlsx",
+      "doc_type": "stock_report",
+      "fields": {
+        "as_of": "2026-12-05",
+        "system": "tally"
+      },
+      "lines": [
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Main Godown",
+          "batch": "BLK-26350",
+          "qty": 15625.36,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2028-01-22",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Main Godown",
+          "batch": "BLK-26181",
+          "qty": 10416.91,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-10-27",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-BOP",
+          "godown": "Quality Hold Godown",
+          "batch": "RT-5170",
+          "qty": 250.0,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-06-25",
+          "status": "QC HOLD"
+        },
+        {
+          "item_code": "BLK-GRN",
+          "godown": "Main Godown",
+          "batch": "BLK-26130",
+          "qty": 404.22,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2028-04-04",
+          "status": "OK"
+        },
+        {
+          "item_code": "BLK-GRN",
+          "godown": "Main Godown",
+          "batch": "BLK-26991",
+          "qty": 269.48,
+          "uom": "kg",
+          "shown_uom": "kg",
+          "expiry": "2027-09-11",
+          "status": "OK"
+        },
+        {
+          "item_code": "FLM-INR-100",
+          "godown": "Packing Material Store",
+          "batch": "FLM-26820",
+          "qty": 1897.29,
+          "uom": "m",
+          "shown_uom": "Roll (500 m)",
+          "expiry": "2028-01-28",
+          "status": "OK"
+        },
+        {
+          "item_code": "FLM-INR-200",
+          "godown": "Packing Material Store",
+          "batch": "FLM-26690",
+          "qty": 24451.73,
+          "uom": "m",
+          "shown_uom": "Roll (500 m)",
+          "expiry": "2027-10-23",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-BOP-100",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26510",
+          "qty": 12602.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-04-30",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-BOP-200",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26160",
+          "qty": 51563.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-08-29",
+          "status": "OK"
+        },
+        {
+          "item_code": "BOX-GRN-100",
+          "godown": "Packing Material Store",
+          "batch": "BOX-26200",
+          "qty": 19323.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2027-12-05",
+          "status": "OK"
+        },
+        {
+          "item_code": "CTN-48",
+          "godown": "Packing Material Store",
+          "batch": "CTN-26050",
+          "qty": 758.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2028-04-17",
+          "status": "OK"
+        },
+        {
+          "item_code": "CTN-24",
+          "godown": "Packing Material Store",
+          "batch": "CTN-26360",
+          "qty": 5108.0,
+          "uom": "pcs",
+          "shown_uom": "pcs",
+          "expiry": "2028-02-24",
+          "status": "OK"
+        }
+      ]
+    },
+    {
+      "document": "capacity_shift_plan.xlsx",
+      "doc_type": "capacity_shift_plan",
+      "fields": {
+        "ot_proposal": null
+      },
+      "lines": [
+        {
+          "work_centre": "BLD-01",
+          "units": 1,
+          "efficiency": 0.85,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        },
+        {
+          "work_centre": "FIL-01",
+          "units": 1,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "FIL-02"
+          ],
+          "status": "DOWN - see maintenance log"
+        },
+        {
+          "work_centre": "FIL-02",
+          "units": 1,
+          "efficiency": 0.65,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [
+            "FIL-01"
+          ],
+          "status": "Running"
+        },
+        {
+          "work_centre": "PKG-01",
+          "units": 4,
+          "efficiency": 0.8,
+          "regular_min_per_day": 480,
+          "ot_max_min_per_day": 120,
+          "alternates": [],
+          "status": "Running"
+        }
+      ]
+    },
+    {
+      "document": "daily_packing_log_2026-12-05.jpg",
+      "doc_type": "production_wip_report",
+      "fields": {
+        "date": "2026-12-05"
+      },
+      "lines": [
+        {
+          "order": "MJ/420",
+          "item": "TEA-BOP-200",
+          "work_centre": "FIL-01",
+          "remaining_qty": 11450,
+          "load_minutes": 515.2
+        },
+        {
+          "order": "MJ/452",
+          "item": "TEA-GRN-100",
+          "work_centre": "FIL-02",
+          "remaining_qty": 10500,
+          "load_minutes": 484.6
+        },
+        {
+          "order": "MJ/784",
+          "item": "TEA-GRN-100",
+          "work_centre": "FIL-02",
+          "remaining_qty": 17530,
+          "load_minutes": 809.1
+        }
+      ]
+    },
+    {
+      "document": "maintenance_log.csv",
+      "doc_type": "maintenance_log",
+      "fields": {},
+      "lines": [
+        {
+          "work_centre": "BLD-01",
+          "machine": "BLD-01 Drum gearbox",
+          "start": "2026-11-21",
+          "status": "Closed",
+          "unavailable_until_incl": null,
+          "expected_return": null
+        },
+        {
+          "work_centre": "FIL-01",
+          "machine": "FIL-01 Heat sealer jaw assembly",
+          "start": "2026-12-05",
+          "status": "Open",
+          "unavailable_until_incl": "2026-12-11",
+          "expected_return": "2026-12-12"
+        }
+      ]
+    },
+    {
+      "document": "purchase_order_PO-962-26-27.pdf",
+      "doc_type": "supplier_purchase_order",
+      "fields": {
+        "po_number": "PO/962/26-27",
+        "supplier_id": "SUP-21",
+        "item_code": "BLK-BOP",
+        "qty": 4550.0,
+        "uom": "kg",
+        "expected_arrival_printed": "2026-12-08"
+      },
+      "lines": []
+    },
+    {
+      "document": "supplier_invoice_TI-26-2213.pdf",
+      "doc_type": "supplier_tax_invoice",
+      "fields": {
+        "document_no": "TI/26/2213",
+        "supplier_id": "SUP-22",
+        "item_code": "FLM-INR-200",
+        "lot": "FLM-26690",
+        "qty": 24451.73,
+        "uom": "m",
+        "currency": "LKR",
+        "unit_price": 26.0,
+        "date_of_supply": "2026-11-27"
+      },
+      "lines": []
+    },
+    {
+      "document": "factory_policy_working_hours.pdf",
+      "doc_type": "factory_policy",
+      "fields": {
+        "regular_hours_week": 48,
+        "max_total_hours_week": 60,
+        "max_ot_hours_day": 2,
+        "max_ot_hours_week": 12,
+        "days_off_per_7": 1,
+        "ot_voluntary": true,
+        "ot_premium_pct": 125
+      },
+      "lines": []
+    }
+  ]
+}
