@@ -1,0 +1,219 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "A_S3_typical",
+  "system_id": "M-mix",
+  "created_at": "2026-11-24T09:31:40+05:30",
+  "planning_start": "2026-11-24",
+  "work_orders": [
+    {
+      "wo_id": "WO-001",
+      "item_code": "POLO-PIQ-NVY",
+      "qty": 2400,
+      "uom": "pcs",
+      "customer_po": "PO-4471",
+      "variant": {
+        "colour": "Navy",
+        "size": "M"
+      },
+      "bom_version": "v3",
+      "priority": 1,
+      "due_date": "2026-12-08",
+      "planned_start": "2026-11-27T08:00:00+05:30",
+      "planned_finish": "2026-12-09T17:00:00+05:30",
+      "is_late": true,
+      "days_late": 1,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-11-27T08:00:00+05:30",
+          "end": "2026-11-28T16:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-2",
+          "start": "2026-11-30T08:00:00+05:30",
+          "end": "2026-12-08T19:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": true
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-09T08:00:00+05:30",
+          "end": "2026-12-09T17:00:00+05:30",
+          "qty": 2400,
+          "uses_overtime": false
+        }
+      ]
+    },
+    {
+      "wo_id": "WO-002",
+      "item_code": "TEE-JSY-WHT",
+      "qty": 1500,
+      "uom": "pcs",
+      "customer_po": "PO-4478",
+      "variant": {
+        "colour": "White",
+        "size": "L"
+      },
+      "bom_version": "v2",
+      "priority": 2,
+      "due_date": "2026-12-05",
+      "planned_start": "2026-11-24T08:00:00+05:30",
+      "planned_finish": "2026-12-04T17:00:00+05:30",
+      "is_late": false,
+      "days_late": 0,
+      "operations": [
+        {
+          "seq": 10,
+          "operation": "Cutting",
+          "machine_id": "CUT-01",
+          "start": "2026-11-24T08:00:00+05:30",
+          "end": "2026-11-25T14:00:00+05:30",
+          "qty": 1500,
+          "uses_overtime": false
+        },
+        {
+          "seq": 20,
+          "operation": "Sewing",
+          "machine_id": "LINE-1",
+          "start": "2026-11-28T08:00:00+05:30",
+          "end": "2026-12-03T17:00:00+05:30",
+          "qty": 1500,
+          "uses_overtime": false
+        },
+        {
+          "seq": 30,
+          "operation": "Finishing and packing",
+          "machine_id": "PACK-01",
+          "start": "2026-12-04T08:00:00+05:30",
+          "end": "2026-12-04T17:00:00+05:30",
+          "qty": 1500,
+          "uses_overtime": false
+        }
+      ]
+    }
+  ],
+  "material_requirements": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "required_qty": 612.0,
+      "on_hand_qty": 367.2,
+      "reserved_qty": 0,
+      "on_order_qty": 0,
+      "net_shortage_qty": 244.8,
+      "for_work_orders": ["WO-001"]
+    },
+    {
+      "item_code": "FAB-JSY-WHT",
+      "uom": "kg",
+      "required_qty": 306.0,
+      "on_hand_qty": 420.0,
+      "reserved_qty": 40.0,
+      "on_order_qty": 0,
+      "net_shortage_qty": 0,
+      "for_work_orders": ["WO-002"]
+    },
+    {
+      "item_code": "BTN-4H-15L",
+      "uom": "pcs",
+      "required_qty": 7344,
+      "on_hand_qty": 12000,
+      "reserved_qty": 2000,
+      "on_order_qty": 0,
+      "net_shortage_qty": 0,
+      "for_work_orders": ["WO-001"]
+    },
+    {
+      "item_code": "THD-POLY-402",
+      "uom": "cone",
+      "required_qty": 160,
+      "on_hand_qty": 110,
+      "reserved_qty": 0,
+      "on_order_qty": 80,
+      "net_shortage_qty": 0,
+      "for_work_orders": ["WO-001", "WO-002"]
+    }
+  ],
+  "shortages": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "uom": "kg",
+      "shortfall_qty": 244.8,
+      "need_by": "2026-11-26",
+      "affected_work_orders": ["WO-001"],
+      "cause": "insufficient_stock"
+    }
+  ],
+  "suggested_pos": [
+    {
+      "item_code": "FAB-PIQ-NVY",
+      "qty": 250,
+      "uom": "kg",
+      "supplier_id": "SUP-03",
+      "need_by": "2026-11-26",
+      "expedite": true,
+      "reason": "Covers the 244.8 kg shortfall for WO-001; SUP-03 has fastest 2-day lead time (+1 day QC receipt lag)."
+    }
+  ],
+  "flags": [
+    {
+      "flag_id": "F1",
+      "type": "shortage",
+      "severity": "high",
+      "message": "Navy pique fabric (FAB-PIQ-NVY) is 244.8 kg short for WO-001; cutting held until expedited PO arrives.",
+      "sources": [
+        { "document": "stock_report.xlsx", "field": "on_hand", "value": 367.2, "page": null, "row": 14 },
+        { "document": "bom_polo.xlsx", "field": "qty_per_unit", "value": 0.25, "page": null, "row": 3 }
+      ],
+      "needs_human": false,
+      "resolution": "Raised suggested expedited PO (250 kg) to SUP-03; WO-001 cutting shifted to 2026-11-27."
+    },
+    {
+      "flag_id": "F2",
+      "type": "machine_down",
+      "severity": "medium",
+      "message": "Sewing LINE-1 is down for needle-bar overhaul from 2026-11-25 to 2026-11-27 inclusive.",
+      "sources": [
+        { "document": "maintenance_log.xlsx", "field": "unavailable_until_incl", "value": "2026-11-27", "page": null, "row": 4 }
+      ],
+      "needs_human": false,
+      "resolution": "Scheduled WO-002 sewing on LINE-1 starting 2026-11-28 after return-to-service; routed WO-001 onto LINE-2."
+    },
+    {
+      "flag_id": "F3",
+      "type": "due_date_risk",
+      "severity": "high",
+      "message": "WO-001 (PO-4471) finishes 1 working day after the buyer's ex-factory date even with policy-compliant weekday overtime.",
+      "sources": [
+        { "document": "customer_po_4471.pdf", "field": "delivery_date", "value": "2026-12-08", "page": 1, "row": null },
+        { "document": "factory_policy_working_hours.pdf", "field": "max_ot_hours_day", "value": 2, "page": 1, "row": null }
+      ],
+      "needs_human": true,
+      "resolution": null
+    }
+  ],
+  "assumptions": [
+    "BoM wastage of 2% applied to fabric and buttons per techpack header.",
+    "Goods received on 2026-11-26 require 1 working day for QC inspection before cutting on 2026-11-27.",
+    "Sunday rest day preserved per factory_policy_working_hours.pdf (max 2h/day weekday overtime used on LINE-2)."
+  ],
+  "rationale": "WO-002 (PO-4478, due Dec 05) has full stock on hand and cuts immediately on CUT-01 while LINE-1 completes planned maintenance through Nov 27, finishing 1 day early on Dec 04. WO-001 (PO-4471, due Dec 08) faces a 244.8 kg FAB-PIQ-NVY shortfall; after Checker revision, cutting is held until Nov 27 (post-QC of SUP-03 expedited PO) and LINE-2 uses 2h/day policy-compliant overtime, resulting in a 1-day slip flagged for buyer confirmation rather than breaching Sunday rest policy.",
+  "checker": {
+    "verdict": "pass",
+    "revisions_used": 1,
+    "issues": [
+      "Plan v1 scheduled WO-001 cutting on 2026-11-25 before expedited FAB-PIQ-NVY PO is usable (2026-11-27)."
+    ],
+    "open_issues": [
+      "Confirm with buyer on PO-4471 whether a 1-working-day ex-factory slip to 2026-12-09 is acceptable."
+    ]
+  }
+}

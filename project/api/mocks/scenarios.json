@@ -1,0 +1,353 @@
+{
+  "scenarios": [
+    {
+      "bundle_id": "A_S1_clean",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S1",
+      "scenario_name": "Normal order",
+      "mess_level": "clean",
+      "n_documents": 12,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_450009009.pdf", "type": "pdf", "size_bytes": 182344, "pages": 2 },
+        { "name": "customer_po_NWO-PO-8504.pdf", "type": "pdf", "size_bytes": 164120, "pages": 1 },
+        { "name": "bom_techpack.xlsx", "type": "xlsx", "size_bytes": 28410, "pages": null },
+        { "name": "routing_odoo_operations.xlsx", "type": "xlsx", "size_bytes": 19220, "pages": null },
+        { "name": "operation_bulletin.xlsx", "type": "xlsx", "size_bytes": 21800, "pages": null },
+        { "name": "stock_on_hand_odoo.xlsx", "type": "xlsx", "size_bytes": 31040, "pages": null },
+        { "name": "capacity_shift_plan.xlsx", "type": "xlsx", "size_bytes": 17650, "pages": null },
+        { "name": "maintenance_log.xlsx", "type": "xlsx", "size_bytes": 14900, "pages": null },
+        { "name": "factory_policy_working_hours.pdf", "type": "pdf", "size_bytes": 94310, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "A_S2_typical",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S2",
+      "scenario_name": "Rush order",
+      "mess_level": "typical",
+      "n_documents": 12,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_450003444.pdf", "type": "pdf", "size_bytes": 175900, "pages": 2 },
+        { "name": "customer_po_KSW-26-4072.pdf", "type": "pdf", "size_bytes": 168200, "pages": 1 },
+        { "name": "bom_techpack.xlsx", "type": "xlsx", "size_bytes": 29110, "pages": null },
+        { "name": "stock_on_hand_odoo.xlsx", "type": "xlsx", "size_bytes": 32400, "pages": null },
+        { "name": "capacity_shift_plan.xlsx", "type": "xlsx", "size_bytes": 18200, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "A_S3_typical",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S3",
+      "scenario_name": "Material shortage",
+      "mess_level": "typical",
+      "n_documents": 11,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_4471.pdf", "type": "pdf", "size_bytes": 182344, "pages": 2 },
+        { "name": "customer_po_4478.pdf", "type": "pdf", "size_bytes": 154890, "pages": 1 },
+        { "name": "bom_polo.xlsx", "type": "xlsx", "size_bytes": 24110, "pages": null },
+        { "name": "routing_odoo_operations.xlsx", "type": "xlsx", "size_bytes": 19840, "pages": null },
+        { "name": "stock_report.xlsx", "type": "xlsx", "size_bytes": 30112, "pages": null },
+        { "name": "purchase_order_P00706.pdf", "type": "pdf", "size_bytes": 112400, "pages": 1 },
+        { "name": "capacity_shift_plan.xlsx", "type": "xlsx", "size_bytes": 17890, "pages": null },
+        { "name": "maintenance_log.xlsx", "type": "xlsx", "size_bytes": 15210, "pages": null },
+        { "name": "factory_policy_working_hours.pdf", "type": "pdf", "size_bytes": 94310, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "A_S4_messy",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S4",
+      "scenario_name": "Machine breakdown",
+      "mess_level": "messy",
+      "n_documents": 11,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_KSW-26-4743.pdf", "type": "pdf", "size_bytes": 412900, "pages": 2 },
+        { "name": "maintenance_log.xlsx", "type": "xlsx", "size_bytes": 16800, "pages": null },
+        { "name": "capacity_shift_plan.xlsx", "type": "xlsx", "size_bytes": 18400, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "A_S6_typical",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S6",
+      "scenario_name": "Conflicting documents",
+      "mess_level": "typical",
+      "n_documents": 12,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_450006120.pdf", "type": "pdf", "size_bytes": 184100, "pages": 2 },
+        { "name": "sales_order_confirmation_SO-882.pdf", "type": "pdf", "size_bytes": 141200, "pages": 1 },
+        { "name": "bom_techpack.xlsx", "type": "xlsx", "size_bytes": 26500, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "A_S7_clean",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S7",
+      "scenario_name": "Capacity overload",
+      "mess_level": "clean",
+      "n_documents": 13,
+      "n_orders": 3,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_101.pdf", "type": "pdf", "size_bytes": 165000, "pages": 1 },
+        { "name": "customer_po_102.pdf", "type": "pdf", "size_bytes": 162400, "pages": 1 },
+        { "name": "customer_po_103.pdf", "type": "pdf", "size_bytes": 170200, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "A_S8_messy",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S8",
+      "scenario_name": "Combined shock",
+      "mess_level": "messy",
+      "n_documents": 12,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_9912.pdf", "type": "pdf", "size_bytes": 398100, "pages": 2 },
+        { "name": "maintenance_log.xlsx", "type": "xlsx", "size_bytes": 16950, "pages": null },
+        { "name": "stock_on_hand_odoo.xlsx", "type": "xlsx", "size_bytes": 35100, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "A_S9_typical",
+      "set": "test",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S9",
+      "scenario_name": "Compliance breach",
+      "mess_level": "typical",
+      "n_documents": 11,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_7741.pdf", "type": "pdf", "size_bytes": 179400, "pages": 1 },
+        { "name": "capacity_shift_plan.xlsx", "type": "xlsx", "size_bytes": 21400, "pages": null },
+        { "name": "factory_policy_working_hours.pdf", "type": "pdf", "size_bytes": 94310, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "B_S2_clean",
+      "set": "test",
+      "profile": "B",
+      "profile_name": "Light assembly (steel furniture)",
+      "scenario": "S2",
+      "scenario_name": "Rush order",
+      "mess_level": "clean",
+      "n_documents": 11,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_SF-401.pdf", "type": "pdf", "size_bytes": 158200, "pages": 1 },
+        { "name": "bom_sapb1_export.xlsx", "type": "xlsx", "size_bytes": 33400, "pages": null },
+        { "name": "inventory_status_report.xlsx", "type": "xlsx", "size_bytes": 28900, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "B_S3_messy",
+      "set": "test",
+      "profile": "B",
+      "profile_name": "Light assembly (steel furniture)",
+      "scenario": "S3",
+      "scenario_name": "Material shortage",
+      "mess_level": "messy",
+      "n_documents": 10,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_SF-519.pdf", "type": "pdf", "size_bytes": 421000, "pages": 2 },
+        { "name": "bom_sapb1_export.xlsx", "type": "xlsx", "size_bytes": 34900, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "B_S5_clean",
+      "set": "test",
+      "profile": "B",
+      "profile_name": "Light assembly (steel furniture)",
+      "scenario": "S5",
+      "scenario_name": "Supplier delay",
+      "mess_level": "clean",
+      "n_documents": 13,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_SF-612.pdf", "type": "pdf", "size_bytes": 161200, "pages": 1 },
+        { "name": "supplier_email_P00812.txt", "type": "txt", "size_bytes": 1840, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "C_S5_typical",
+      "set": "test",
+      "profile": "C",
+      "profile_name": "Food packing (tea packer)",
+      "scenario": "S5",
+      "scenario_name": "Supplier delay",
+      "mess_level": "typical",
+      "n_documents": 12,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_TP-204.pdf", "type": "pdf", "size_bytes": 149200, "pages": 1 },
+        { "name": "bom_tally.xlsx", "type": "xlsx", "size_bytes": 24300, "pages": null },
+        { "name": "godown_summary_tally.xlsx", "type": "xlsx", "size_bytes": 29800, "pages": null },
+        { "name": "supplier_email_P00319.txt", "type": "txt", "size_bytes": 1620, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "C_S6_clean",
+      "set": "test",
+      "profile": "C",
+      "profile_name": "Food packing (tea packer)",
+      "scenario": "S6",
+      "scenario_name": "Conflicting documents",
+      "mess_level": "clean",
+      "n_documents": 10,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_TP-311.pdf", "type": "pdf", "size_bytes": 152000, "pages": 1 },
+        { "name": "delivery_note_DN-904.pdf", "type": "pdf", "size_bytes": 131000, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "C_S8_messy",
+      "set": "test",
+      "profile": "C",
+      "profile_name": "Food packing (tea packer)",
+      "scenario": "S8",
+      "scenario_name": "Combined shock",
+      "mess_level": "messy",
+      "n_documents": 11,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_TP-889.pdf", "type": "pdf", "size_bytes": 445000, "pages": 2 },
+        { "name": "daily_packing_log_scan.jpg", "type": "jpg", "size_bytes": 612000, "pages": null },
+        { "name": "maintenance_log.csv", "type": "csv", "size_bytes": 4210, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "dev_A_S1_clean",
+      "set": "dev",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S1",
+      "scenario_name": "Normal order",
+      "mess_level": "clean",
+      "n_documents": 11,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_DEV-101.pdf", "type": "pdf", "size_bytes": 162000, "pages": 1 },
+        { "name": "bom_techpack.xlsx", "type": "xlsx", "size_bytes": 24100, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "dev_B_S3_typical",
+      "set": "dev",
+      "profile": "B",
+      "profile_name": "Light assembly (steel furniture)",
+      "scenario": "S3",
+      "scenario_name": "Material shortage",
+      "mess_level": "typical",
+      "n_documents": 10,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_DEV-202.pdf", "type": "pdf", "size_bytes": 171000, "pages": 1 },
+        { "name": "bom_sapb1_export.xlsx", "type": "xlsx", "size_bytes": 31200, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "dev_C_S5_messy",
+      "set": "dev",
+      "profile": "C",
+      "profile_name": "Food packing (tea packer)",
+      "scenario": "S5",
+      "scenario_name": "Supplier delay",
+      "mess_level": "messy",
+      "n_documents": 13,
+      "n_orders": 2,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_DEV-303.pdf", "type": "pdf", "size_bytes": 392000, "pages": 2 },
+        { "name": "supplier_email_DEV.txt", "type": "txt", "size_bytes": 1490, "pages": null }
+      ]
+    },
+    {
+      "bundle_id": "scale_A_S1_typical_o1",
+      "set": "scale",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S1",
+      "scenario_name": "Normal order (1 PO)",
+      "mess_level": "typical",
+      "n_documents": 11,
+      "n_orders": 1,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_KSW-26-7664.pdf", "type": "pdf", "size_bytes": 169000, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "scale_A_S1_typical_o3",
+      "set": "scale",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S1",
+      "scenario_name": "Normal order (3 POs)",
+      "mess_level": "typical",
+      "n_documents": 13,
+      "n_orders": 3,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_KSW-26-7664.pdf", "type": "pdf", "size_bytes": 169000, "pages": 1 },
+        { "name": "customer_po_NWO-PO-4812.pdf", "type": "pdf", "size_bytes": 171200, "pages": 1 },
+        { "name": "customer_po_450008015.pdf", "type": "pdf", "size_bytes": 164800, "pages": 1 }
+      ]
+    },
+    {
+      "bundle_id": "scale_A_S1_typical_o5",
+      "set": "scale",
+      "profile": "A",
+      "profile_name": "Apparel export (cut-make-trim)",
+      "scenario": "S1",
+      "scenario_name": "Normal order (5 POs)",
+      "mess_level": "typical",
+      "n_documents": 15,
+      "n_orders": 5,
+      "has_answer_key": true,
+      "files": [
+        { "name": "customer_po_KSW-26-7664.pdf", "type": "pdf", "size_bytes": 169000, "pages": 1 },
+        { "name": "customer_po_NWO-PO-4812.pdf", "type": "pdf", "size_bytes": 171200, "pages": 1 },
+        { "name": "customer_po_KSW-26-2897.pdf", "type": "pdf", "size_bytes": 168100, "pages": 1 },
+        { "name": "customer_po_NWO-PO-3536.pdf", "type": "pdf", "size_bytes": 172900, "pages": 1 },
+        { "name": "customer_po_NWO-PO-6389.pdf", "type": "pdf", "size_bytes": 165400, "pages": 1 }
+      ]
+    }
+  ]
+}

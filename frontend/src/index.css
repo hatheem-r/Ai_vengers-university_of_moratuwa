@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Industrial Default (#F8F9FA canvas, #FFFFFF card, #E2E8F0 hairline, #0F172A primary, #475569 muted) */
+    --bg-canvas: 248 249 250;
+    --bg-surface: 255 255 255;
+    --bg-subtle: 241 245 249;
+    --border-hairline: 226 232 240;
+    --border-strong: 203 213 225;
+    --text-primary: 15 23 42;
+    --text-muted: 71 85 105;
+    --text-faint: 100 116 139;
+  }
+
+  .dark {
+    /* Optional Dark Industrial SCADA Palette */
+    --bg-canvas: 11 15 23;
+    --bg-surface: 17 24 39;
+    --bg-subtle: 24 33 50;
+    --border-hairline: 30 41 59;
+    --border-strong: 51 65 85;
+    --text-primary: 248 250 252;
+    --text-muted: 148 163 184;
+    --text-faint: 100 116 139;
+  }
+
+  body {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hatched pattern for maintenance downtime blocks on the Machine Gantt */
+.bg-hatched-downtime {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(220, 38, 38, 0.14),
+    rgba(220, 38, 38, 0.14) 5px,
+    rgba(220, 38, 38, 0.04) 5px,
+    rgba(220, 38, 38, 0.04) 10px
+  );
+}
+
+/* Subtle striped pattern for overtime scheduled bars */
+.bg-striped-overtime {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(217, 119, 6, 0.22),
+    rgba(217, 119, 6, 0.22) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

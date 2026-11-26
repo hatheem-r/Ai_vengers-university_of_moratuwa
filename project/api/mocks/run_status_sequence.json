@@ -1,0 +1,172 @@
+[
+  {
+    "at_second": 0,
+    "status": "queued",
+    "current_step": "intake",
+    "plan_version": 0,
+    "revisions": { "checker": 0, "human": 0 },
+    "steps": [
+      {
+        "key": "intake",
+        "label": "Intake Agent",
+        "model": "claude-haiku-5-5",
+        "status": "pending",
+        "started_at": null,
+        "ended_at": null,
+        "progress": { "done": 0, "total": 9 },
+        "detail": "Queued 9 bundle documents for parallel extraction",
+        "items": [
+          { "name": "customer_po_4471.pdf", "status": "pending" },
+          { "name": "customer_po_4478.pdf", "status": "pending" },
+          { "name": "bom_polo.xlsx", "status": "pending" },
+          { "name": "routing_odoo_operations.xlsx", "status": "pending" },
+          { "name": "stock_report.xlsx", "status": "pending" },
+          { "name": "purchase_order_P00706.pdf", "status": "pending" },
+          { "name": "capacity_shift_plan.xlsx", "status": "pending" },
+          { "name": "maintenance_log.xlsx", "status": "pending" },
+          { "name": "factory_policy_working_hours.pdf", "status": "pending" }
+        ]
+      },
+      { "key": "planner", "label": "Planner Agent", "model": "claude-sonnet-5-5", "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] },
+      { "key": "checker", "label": "Checker Agent", "model": "claude-haiku-5-5", "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] },
+      { "key": "approval", "label": "Human approval", "model": null, "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] }
+    ],
+    "metrics": { "elapsed_s": 0.4, "llm_calls": 0, "tool_calls": 0, "input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0 }
+  },
+  {
+    "at_second": 2,
+    "status": "running",
+    "current_step": "intake",
+    "plan_version": 0,
+    "revisions": { "checker": 0, "human": 0 },
+    "steps": [
+      {
+        "key": "intake",
+        "label": "Intake Agent",
+        "model": "claude-haiku-5-5",
+        "status": "running",
+        "started_at": "2026-11-24T09:30:01+05:30",
+        "ended_at": null,
+        "progress": { "done": 5, "total": 9 },
+        "detail": "Extracting PDFs & spreadsheets in parallel via LangGraph Send (5/9 validated)",
+        "items": [
+          { "name": "customer_po_4471.pdf", "status": "done" },
+          { "name": "customer_po_4478.pdf", "status": "running" },
+          { "name": "bom_polo.xlsx", "status": "done" },
+          { "name": "routing_odoo_operations.xlsx", "status": "done" },
+          { "name": "stock_report.xlsx", "status": "done" },
+          { "name": "purchase_order_P00706.pdf", "status": "running" },
+          { "name": "capacity_shift_plan.xlsx", "status": "done" },
+          { "name": "maintenance_log.xlsx", "status": "running" },
+          { "name": "factory_policy_working_hours.pdf", "status": "running" }
+        ]
+      },
+      { "key": "planner", "label": "Planner Agent", "model": "claude-sonnet-5-5", "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] },
+      { "key": "checker", "label": "Checker Agent", "model": "claude-haiku-5-5", "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] },
+      { "key": "approval", "label": "Human approval", "model": null, "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] }
+    ],
+    "metrics": { "elapsed_s": 8.2, "llm_calls": 5, "tool_calls": 0, "input_tokens": 38400, "cached_input_tokens": 6200, "output_tokens": 4120, "cost_usd": 0.02 }
+  },
+  {
+    "at_second": 5,
+    "status": "running",
+    "current_step": "planner",
+    "plan_version": 0,
+    "revisions": { "checker": 0, "human": 0 },
+    "steps": [
+      {
+        "key": "intake",
+        "label": "Intake Agent",
+        "model": "claude-haiku-5-5",
+        "status": "done",
+        "started_at": "2026-11-24T09:30:01+05:30",
+        "ended_at": "2026-11-24T09:30:16+05:30",
+        "progress": { "done": 9, "total": 9 },
+        "detail": "9 documents extracted & schema-validated (1 repair retry on stock UoM)",
+        "items": [
+          { "name": "customer_po_4471.pdf", "status": "done" },
+          { "name": "customer_po_4478.pdf", "status": "done" },
+          { "name": "bom_polo.xlsx", "status": "done" },
+          { "name": "routing_odoo_operations.xlsx", "status": "done" },
+          { "name": "stock_report.xlsx", "status": "done" },
+          { "name": "purchase_order_P00706.pdf", "status": "done" },
+          { "name": "capacity_shift_plan.xlsx", "status": "done" },
+          { "name": "maintenance_log.xlsx", "status": "done" },
+          { "name": "factory_policy_working_hours.pdf", "status": "done" }
+        ]
+      },
+      { "key": "planner", "label": "Planner Agent", "model": "claude-sonnet-5-5", "status": "running", "started_at": "2026-11-24T09:30:16+05:30", "ended_at": null, "progress": null, "detail": "Calling mrp_tool (BoM explosion & netting) and schedule_tool (OR-Tools CP-SAT)", "items": [] },
+      { "key": "checker", "label": "Checker Agent", "model": "claude-haiku-5-5", "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] },
+      { "key": "approval", "label": "Human approval", "model": null, "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] }
+    ],
+    "metrics": { "elapsed_s": 29.5, "llm_calls": 11, "tool_calls": 2, "input_tokens": 86100, "cached_input_tokens": 18000, "output_tokens": 11400, "cost_usd": 0.14 }
+  },
+  {
+    "at_second": 9,
+    "status": "running",
+    "current_step": "checker",
+    "plan_version": 1,
+    "revisions": { "checker": 1, "human": 0 },
+    "steps": [
+      {
+        "key": "intake",
+        "label": "Intake Agent",
+        "model": "claude-haiku-5-5",
+        "status": "done",
+        "started_at": "2026-11-24T09:30:01+05:30",
+        "ended_at": "2026-11-24T09:30:16+05:30",
+        "progress": { "done": 9, "total": 9 },
+        "detail": "9 documents extracted & schema-validated (1 repair retry)",
+        "items": [
+          { "name": "customer_po_4471.pdf", "status": "done" },
+          { "name": "customer_po_4478.pdf", "status": "done" },
+          { "name": "bom_polo.xlsx", "status": "done" },
+          { "name": "routing_odoo_operations.xlsx", "status": "done" },
+          { "name": "stock_report.xlsx", "status": "done" },
+          { "name": "purchase_order_P00706.pdf", "status": "done" },
+          { "name": "capacity_shift_plan.xlsx", "status": "done" },
+          { "name": "maintenance_log.xlsx", "status": "done" },
+          { "name": "factory_policy_working_hours.pdf", "status": "done" }
+        ]
+      },
+      { "key": "planner", "label": "Planner Agent", "model": "claude-sonnet-5-5", "status": "running", "started_at": "2026-11-24T09:30:16+05:30", "ended_at": null, "progress": null, "detail": "Revising Plan v1 -> v2 after Checker flagged early cutting before fabric ETA", "items": [] },
+      { "key": "checker", "label": "Checker Agent", "model": "claude-haiku-5-5", "status": "done", "started_at": "2026-11-24T09:30:44+05:30", "ended_at": "2026-11-24T09:30:51+05:30", "progress": null, "detail": "Revision 1/1 triggered via rule_check (material_not_ready)", "items": [] },
+      { "key": "approval", "label": "Human approval", "model": null, "status": "pending", "started_at": null, "ended_at": null, "progress": null, "detail": null, "items": [] }
+    ],
+    "metrics": { "elapsed_s": 52.8, "llm_calls": 14, "tool_calls": 5, "input_tokens": 121900, "cached_input_tokens": 31000, "output_tokens": 17800, "cost_usd": 0.25 }
+  },
+  {
+    "at_second": 13,
+    "status": "awaiting_approval",
+    "current_step": "approval",
+    "plan_version": 2,
+    "revisions": { "checker": 1, "human": 0 },
+    "steps": [
+      {
+        "key": "intake",
+        "label": "Intake Agent",
+        "model": "claude-haiku-5-5",
+        "status": "done",
+        "started_at": "2026-11-24T09:30:01+05:30",
+        "ended_at": "2026-11-24T09:30:16+05:30",
+        "progress": { "done": 9, "total": 9 },
+        "detail": "9 documents read, 1 repair retry",
+        "items": [
+          { "name": "customer_po_4471.pdf", "status": "done" },
+          { "name": "customer_po_4478.pdf", "status": "done" },
+          { "name": "bom_polo.xlsx", "status": "done" },
+          { "name": "routing_odoo_operations.xlsx", "status": "done" },
+          { "name": "stock_report.xlsx", "status": "done" },
+          { "name": "purchase_order_P00706.pdf", "status": "done" },
+          { "name": "capacity_shift_plan.xlsx", "status": "done" },
+          { "name": "maintenance_log.xlsx", "status": "done" },
+          { "name": "factory_policy_working_hours.pdf", "status": "done" }
+        ]
+      },
+      { "key": "planner", "label": "Planner Agent", "model": "claude-sonnet-5-5", "status": "done", "started_at": "2026-11-24T09:30:16+05:30", "ended_at": "2026-11-24T09:31:05+05:30", "progress": null, "detail": "Revised once after Checker feedback; built feasible Plan v2", "items": [] },
+      { "key": "checker", "label": "Checker Agent", "model": "claude-haiku-5-5", "status": "done", "started_at": "2026-11-24T09:31:05+05:30", "ended_at": "2026-11-24T09:31:12+05:30", "progress": null, "detail": "Verdict: PASS (1 open buyer due-date item flagged for human)", "items": [] },
+      { "key": "approval", "label": "Human approval", "model": null, "status": "running", "started_at": "2026-11-24T09:31:12+05:30", "ended_at": null, "progress": null, "detail": "Paused at LangGraph interrupt() — awaiting planner sign-off", "items": [] }
+    ],
+    "metrics": { "elapsed_s": 71.4, "llm_calls": 15, "tool_calls": 6, "input_tokens": 142300, "cached_input_tokens": 38000, "output_tokens": 21450, "cost_usd": 0.31 }
+  }
+]
