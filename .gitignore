@@ -19,12 +19,19 @@ venv/
 .vscode/
 .idea/
 
-# Run outputs
+# Run outputs (never commit per TASKS.md)
+runs/
 logs/
 traces/
 
-# Run folders (never commit; TASKS.md §0.4)
+# Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+# Run folders (trace.jsonl, plan.json)
 runs/
+project/runs/
 
 # macOS zip leftovers
 __MACOSX/

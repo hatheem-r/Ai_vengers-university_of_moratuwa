@@ -1,0 +1,218 @@
+{
+  "eval_id": "mock_preview_20261124",
+  "created_at": "2026-11-24T10:00:00+05:30",
+  "status": "complete",
+  "is_mock": true,
+  "config": {
+    "bundles": 18,
+    "repeats": { "B": 3, "M-S": 3, "M-mix": 1 },
+    "budgets": { "max_llm_calls": 40, "max_tokens": 1500000, "max_seconds": 600 },
+    "intake_model_mix": "claude-haiku-5-5"
+  },
+  "systems": [
+    {
+      "system_id": "B",
+      "label": "Single-Agent Baseline (Sonnet 5.5)",
+      "mode": "baseline",
+      "models": { "agent": "claude-sonnet-5-5" }
+    },
+    {
+      "system_id": "M-S",
+      "label": "Multi-Agent Fair Test (All Sonnet 5.5)",
+      "mode": "multi_agent",
+      "models": { "intake": "claude-sonnet-5-5", "planner": "claude-sonnet-5-5", "checker": "claude-sonnet-5-5" }
+    },
+    {
+      "system_id": "M-mix",
+      "label": "Multi-Agent Cost-Optimised (Haiku + Sonnet)",
+      "mode": "multi_agent",
+      "models": { "intake": "claude-haiku-5-5", "planner": "claude-sonnet-5-5", "checker": "claude-haiku-5-5" }
+    }
+  ],
+  "overall": [
+    {
+      "system_id": "M-S",
+      "n_runs": 54,
+      "pqs_mean": 88.6,
+      "pqs_std": 5.4,
+      "pass_rate": 0.852,
+      "run_success_rate": 0.981,
+      "latency_median_s": 74.2,
+      "latency_max_s": 138.0,
+      "cost_mean_usd": 0.68,
+      "tokens_mean": 168400,
+      "metrics": {
+        "q1": 0.96,
+        "q2": 0.95,
+        "q3": 0.94,
+        "q3_recall": 0.96,
+        "q4": 0.91,
+        "q5": 0.97,
+        "q6": 0.88,
+        "q7": 0.84,
+        "false_flags_mean": 0.35
+      }
+    },
+    {
+      "system_id": "M-mix",
+      "n_runs": 18,
+      "pqs_mean": 86.4,
+      "pqs_std": 6.1,
+      "pass_rate": 0.833,
+      "run_success_rate": 0.972,
+      "latency_median_s": 63.8,
+      "latency_max_s": 119.5,
+      "cost_mean_usd": 0.34,
+      "tokens_mean": 161200,
+      "metrics": {
+        "q1": 0.93,
+        "q2": 0.94,
+        "q3": 0.93,
+        "q3_recall": 0.94,
+        "q4": 0.89,
+        "q5": 0.96,
+        "q6": 0.86,
+        "q7": 0.81,
+        "false_flags_mean": 0.44
+      }
+    },
+    {
+      "system_id": "B",
+      "n_runs": 54,
+      "pqs_mean": 75.8,
+      "pqs_std": 10.2,
+      "pass_rate": 0.574,
+      "run_success_rate": 0.926,
+      "latency_median_s": 112.5,
+      "latency_max_s": 241.0,
+      "cost_mean_usd": 0.85,
+      "tokens_mean": 384900,
+      "metrics": {
+        "q1": 0.89,
+        "q2": 0.88,
+        "q3": 0.85,
+        "q3_recall": 0.84,
+        "q4": 0.79,
+        "q5": 0.81,
+        "q6": 0.77,
+        "q7": 0.58,
+        "false_flags_mean": 0.92
+      }
+    }
+  ],
+  "by_scenario": [
+    { "system_id": "M-S", "scenario": "S1", "n_runs": 9, "pqs_mean": 94.2, "pass_rate": 1.0 },
+    { "system_id": "M-mix", "scenario": "S1", "n_runs": 3, "pqs_mean": 93.1, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S1", "n_runs": 9, "pqs_mean": 92.8, "pass_rate": 0.89 },
+
+    { "system_id": "M-S", "scenario": "S2", "n_runs": 6, "pqs_mean": 90.4, "pass_rate": 0.83 },
+    { "system_id": "M-mix", "scenario": "S2", "n_runs": 2, "pqs_mean": 88.5, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S2", "n_runs": 6, "pqs_mean": 82.1, "pass_rate": 0.67 },
+
+    { "system_id": "M-S", "scenario": "S3", "n_runs": 9, "pqs_mean": 90.1, "pass_rate": 0.89 },
+    { "system_id": "M-mix", "scenario": "S3", "n_runs": 3, "pqs_mean": 88.2, "pass_rate": 0.67 },
+    { "system_id": "B", "scenario": "S3", "n_runs": 9, "pqs_mean": 80.5, "pass_rate": 0.67 },
+
+    { "system_id": "M-S", "scenario": "S4", "n_runs": 6, "pqs_mean": 88.0, "pass_rate": 0.83 },
+    { "system_id": "M-mix", "scenario": "S4", "n_runs": 2, "pqs_mean": 85.4, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S4", "n_runs": 6, "pqs_mean": 75.2, "pass_rate": 0.50 },
+
+    { "system_id": "M-S", "scenario": "S5", "n_runs": 6, "pqs_mean": 87.5, "pass_rate": 0.83 },
+    { "system_id": "M-mix", "scenario": "S5", "n_runs": 2, "pqs_mean": 84.9, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S5", "n_runs": 6, "pqs_mean": 73.6, "pass_rate": 0.50 },
+
+    { "system_id": "M-S", "scenario": "S6", "n_runs": 6, "pqs_mean": 86.9, "pass_rate": 0.83 },
+    { "system_id": "M-mix", "scenario": "S6", "n_runs": 2, "pqs_mean": 84.8, "pass_rate": 0.50 },
+    { "system_id": "B", "scenario": "S6", "n_runs": 6, "pqs_mean": 63.4, "pass_rate": 0.33 },
+
+    { "system_id": "M-S", "scenario": "S7", "n_runs": 3, "pqs_mean": 87.2, "pass_rate": 0.67 },
+    { "system_id": "M-mix", "scenario": "S7", "n_runs": 1, "pqs_mean": 85.0, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S7", "n_runs": 3, "pqs_mean": 77.9, "pass_rate": 0.67 },
+
+    { "system_id": "M-S", "scenario": "S8", "n_runs": 6, "pqs_mean": 83.4, "pass_rate": 0.67 },
+    { "system_id": "M-mix", "scenario": "S8", "n_runs": 2, "pqs_mean": 80.7, "pass_rate": 0.50 },
+    { "system_id": "B", "scenario": "S8", "n_runs": 6, "pqs_mean": 62.8, "pass_rate": 0.33 },
+
+    { "system_id": "M-S", "scenario": "S9", "n_runs": 3, "pqs_mean": 88.8, "pass_rate": 1.0 },
+    { "system_id": "M-mix", "scenario": "S9", "n_runs": 1, "pqs_mean": 86.5, "pass_rate": 1.0 },
+    { "system_id": "B", "scenario": "S9", "n_runs": 3, "pqs_mean": 61.2, "pass_rate": 0.33 }
+  ],
+  "by_mess_level": [
+    { "system_id": "M-S", "mess_level": "clean", "n_runs": 15, "pqs_mean": 92.4, "q1": 0.99 },
+    { "system_id": "M-mix", "mess_level": "clean", "n_runs": 5, "pqs_mean": 91.2, "q1": 0.98 },
+    { "system_id": "B", "mess_level": "clean", "n_runs": 15, "pqs_mean": 85.1, "q1": 0.96 },
+
+    { "system_id": "M-S", "mess_level": "typical", "n_runs": 24, "pqs_mean": 88.7, "q1": 0.96 },
+    { "system_id": "M-mix", "mess_level": "typical", "n_runs": 8, "pqs_mean": 86.5, "q1": 0.94 },
+    { "system_id": "B", "mess_level": "typical", "n_runs": 24, "pqs_mean": 75.4, "q1": 0.89 },
+
+    { "system_id": "M-S", "mess_level": "messy", "n_runs": 15, "pqs_mean": 84.6, "q1": 0.92 },
+    { "system_id": "M-mix", "mess_level": "messy", "n_runs": 5, "pqs_mean": 81.4, "q1": 0.88 },
+    { "system_id": "B", "mess_level": "messy", "n_runs": 15, "pqs_mean": 67.1, "q1": 0.81 }
+  ],
+  "paired": [
+    {
+      "a": "M-S",
+      "b": "B",
+      "n_bundles": 18,
+      "mean_pqs_diff": 12.8,
+      "wins": 14,
+      "ties": 3,
+      "losses": 1,
+      "wilcoxon_p": 0.0018
+    },
+    {
+      "a": "M-mix",
+      "b": "B",
+      "n_bundles": 18,
+      "mean_pqs_diff": 10.6,
+      "wins": 13,
+      "ties": 4,
+      "losses": 1,
+      "wilcoxon_p": 0.0034
+    },
+    {
+      "a": "M-S",
+      "b": "M-mix",
+      "n_bundles": 18,
+      "mean_pqs_diff": 2.2,
+      "wins": 6,
+      "ties": 11,
+      "losses": 1,
+      "wilcoxon_p": 0.064
+    }
+  ],
+  "scalability": [
+    { "system_id": "M-mix", "n_orders": 1, "n_runs": 3, "latency_median_s": 54.0, "tokens_mean": 132000, "cost_mean_usd": 0.29, "pqs_mean": 92.8 },
+    { "system_id": "M-mix", "n_orders": 3, "n_runs": 3, "latency_median_s": 69.5, "tokens_mean": 176400, "cost_mean_usd": 0.39, "pqs_mean": 90.4 },
+    { "system_id": "M-mix", "n_orders": 5, "n_runs": 3, "latency_median_s": 86.2, "tokens_mean": 224800, "cost_mean_usd": 0.49, "pqs_mean": 88.9 },
+    { "system_id": "B", "n_orders": 1, "n_runs": 3, "latency_median_s": 89.0, "tokens_mean": 298000, "cost_mean_usd": 0.67, "pqs_mean": 88.2 },
+    { "system_id": "B", "n_orders": 3, "n_runs": 3, "latency_median_s": 146.4, "tokens_mean": 482000, "cost_mean_usd": 1.08, "pqs_mean": 79.5 },
+    { "system_id": "B", "n_orders": 5, "n_runs": 3, "latency_median_s": 218.7, "tokens_mean": 694000, "cost_mean_usd": 1.54, "pqs_mean": 71.0 }
+  ],
+  "human": {
+    "participants": 2,
+    "bundles": 6,
+    "hourly_rate_lkr": 1850,
+    "rate_source": "Illustrative mock rate (Sri Lanka apparel production planner estimate; replaced after Fri 27 Nov session)",
+    "results": [
+      { "participant": "H1", "bundle_id": "C_S1_messy", "pqs": 86.0, "minutes": 38.5, "cost_lkr": 1187.0 },
+      { "participant": "H1", "bundle_id": "A_S3_typical", "pqs": 84.5, "minutes": 44.0, "cost_lkr": 1356.7 },
+      { "participant": "H1", "bundle_id": "B_S5_clean", "pqs": 88.2, "minutes": 35.0, "cost_lkr": 1079.2 },
+      { "participant": "H2", "bundle_id": "C_S6_clean", "pqs": 82.0, "minutes": 41.0, "cost_lkr": 1264.2 },
+      { "participant": "H2", "bundle_id": "A_S8_messy", "pqs": 73.4, "minutes": 58.0, "cost_lkr": 1788.3 },
+      { "participant": "H2", "bundle_id": "A_S9_typical", "pqs": 79.5, "minutes": 49.5, "cost_lkr": 1526.3 }
+    ],
+    "summary": { "pqs_mean": 82.3, "minutes_mean": 44.3 }
+  },
+  "runs": [
+    { "run_id": "run_20261124_093000_mmix", "bundle_id": "A_S3_typical", "system_id": "M-mix", "repeat": 1, "pqs": 91.4, "passed": true, "success": true, "latency_s": 71.4, "tokens": 163750, "cost_usd": 0.31 },
+    { "run_id": "run_20261124_092500_base", "bundle_id": "A_S3_typical", "system_id": "B", "repeat": 1, "pqs": 71.5, "passed": false, "success": true, "latency_s": 114.2, "tokens": 392500, "cost_usd": 0.84 }
+  ],
+  "limitations": [
+    "MOCK PREVIEW DATA: Illustrative sample values for UI verification only; real benchmark figures come exclusively from running evaluation/run_benchmark.py.",
+    "Synthetic factory documents only (18 test bundles across 3 profiles); results may not transfer directly to every real ERP layout.",
+    "Human baseline uses 2 team members across 6 bundles using Excel + calculator rather than external industrial planners.",
+    "Wilcoxon signed-rank p-values on n=18 bundles are reported as directional indicators only."
+  ]
+}

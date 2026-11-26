@@ -99,8 +99,7 @@ def run_tool(ctx: RunContext, agent: AgentName, name: str, args: Any) -> BaseMod
     out = fn(inp)
     latency_ms = int((time.monotonic() - t0) * 1000)
     out = out if isinstance(out, spec.output_model) else spec.output_model.model_validate(out)
-    with ctx._lock:
-        ctx.tool_calls += 1
+    ctx.record_tool()
     ctx.emit("tool_call", agent=agent, tool=name, latency_ms=latency_ms, cost_usd=0,
              summary=f"{name}{' (stub)' if is_stub else ''}: {summarise(name, out)}",
              payload={"stub": is_stub, "summary": summarise(name, out)})

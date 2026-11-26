@@ -204,14 +204,62 @@ def checker_responder(verdicts: Iterable[str] = ()) -> Responder:
     return respond
 
 
+# --- Baseline (single agent) ----------------------------------------------------------------
+
+def baseline_responder(extraction_key: Optional[dict] = None, extra_flags: Optional[list[dict]] = None) -> Responder:
+    """read_document for every file (one turn, parallel calls) -> mrp_tool -> schedule_tool ->
+    rule_check -> draft. The tool inputs come from the extraction key (a test helper standing in
+    for what the model would read), never from the system."""
+    docs = [d for d in (extraction_key or {}).get("documents", [])]
+
+    def respond(messages: list[BaseMessage]) -> AIMessage:
+        tool_msgs = [m for m in messages if isinstance(m, ToolMessage)]
+        if not tool_msgs:
+            files = re.findall(r"^- (\S+)$", message_text(messages[1]), re.M)
+            return AIMessage(content="", tool_calls=[{"name": "read_document", "id": f"call_{next(_ids)}",
+                                                      "args": {"name": f}} for f in files])
+        wos = draft_work_orders(docs)
+        mrp_in, sched_in = build_tool_inputs(docs, wos)
+        rounds = [m for m in messages if isinstance(m, HumanMessage) and "rejected your plan" in message_text(m)]
+        after = _after_last(messages, rounds[-1]) if rounds else tool_msgs
+        stage = [m for m in after if isinstance(m, ToolMessage) and "File: " not in message_text(m)]
+        draft = {"planning_start": mrp_in.planning_start.isoformat(), "work_orders": wos,
+                 "flags": extra_flags or [],
+                 "assumptions": ["Fake baseline: tool inputs mapped from the extraction key."]
+                                + (["Human notes applied."] if rounds else []),
+                 "rationale": "Deterministic fake baseline used in tests."}
+        if len(stage) == 0:
+            return AIMessage(content="", tool_calls=[{"name": "mrp_tool", "id": f"call_{next(_ids)}",
+                                                      "args": mrp_in.model_dump(mode="json")}])
+        if len(stage) == 1:
+            ready = json.loads(message_text(stage[0])).get("material_ready", {})
+            for job in sched_in.jobs:
+                if job.wo_id in ready:
+                    job.earliest_start = date.fromisoformat(ready[job.wo_id])
+            return AIMessage(content="", tool_calls=[{"name": "schedule_tool", "id": f"call_{next(_ids)}",
+                                                      "args": sched_in.model_dump(mode="json")}])
+        if len(stage) == 2:
+            return AIMessage(content="", tool_calls=[{"name": "rule_check", "id": f"call_{next(_ids)}",
+                                                      "args": {"draft": draft}}])
+        return _json_reply(draft)
+    return respond
+
+
+def _after_last(messages: list[BaseMessage], marker: BaseMessage) -> list[BaseMessage]:
+    idx = max(i for i, m in enumerate(messages) if m is marker)
+    return messages[idx + 1:]
+
+
 # --- install ---------------------------------------------------------------------------------
 
 def install(extraction_key: Optional[dict] = None, checker_verdicts: Iterable[str] = (),
-            planner: Optional[Responder] = None) -> dict[str, FakeChatModel]:
+            planner: Optional[Responder] = None, baseline: Optional[Responder] = None) -> dict[str, FakeChatModel]:
     """Route every agent to a fake model. Returns the models (their `.calls` record the prompts)."""
     fakes = {"intake": FakeChatModel(responder=intake_responder(extraction_key), model="fake-intake", calls=[]),
              "planner": FakeChatModel(responder=planner or planner_responder(), model="fake-planner", calls=[]),
-             "checker": FakeChatModel(responder=checker_responder(checker_verdicts), model="fake-checker", calls=[])}
+             "checker": FakeChatModel(responder=checker_responder(checker_verdicts), model="fake-checker", calls=[]),
+             "agent": FakeChatModel(responder=baseline or baseline_responder(extraction_key), model="fake-agent",
+                                    calls=[])}
 
     def factory(agent: str, spec: ModelSpec) -> BaseChatModel:
         return fakes[agent]

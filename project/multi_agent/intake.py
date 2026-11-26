@@ -18,12 +18,14 @@ from pathlib import Path
 from typing import Any, Optional, Union, get_args, get_origin
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from core.schemas import ExtractedDocument, OtherDocument, RunConfig, parse_extracted_document
 
 from .context import RunContext, get_ctx, null_ctx
-from .llm import ModelLike, call_llm, chat_model, parse_json_reply, spec_for
+from core.harness import SchemaRepairFailed, call_json
+
+from .llm import ModelLike, chat_model, parse_json_reply, spec_for
 from .prompts import load_prompt
 
 SUPPORTED_SUFFIXES = {".pdf", ".xlsx", ".xlsm", ".csv", ".txt", ".eml", ".md", ".json", ".png", ".jpg", ".jpeg"}
@@ -182,27 +184,22 @@ def extract_document(path: Union[str, Path], model: ModelLike = "haiku-5-5", *,
     ctx = ctx or null_ctx()
     llm, model_id = chat_model("intake", model)
     messages = [SystemMessage(system_prompt()), HumanMessage(content=document_content(path))]
-    reply = call_llm(ctx, "intake", llm, model_id, messages, item=path.name, purpose="extract")
     try:
-        return _validate(parse_json_reply(reply), path.name)
-    except (ValueError, ValidationError) as exc:
-        first_error = _short_error(exc)
-    messages += [reply, HumanMessage(
-        f"Your JSON did not validate:\n{first_error}\nReturn the corrected JSON object only.")]
-    reply = call_llm(ctx, "intake", llm, model_id, messages, item=path.name, purpose="schema repair")
-    try:
-        return _validate(parse_json_reply(reply), path.name)
-    except (ValueError, ValidationError) as exc:
-        raw = {}
+        return call_json(ctx, "intake", llm, model_id, messages, lambda r: _validate(parse_json_reply(r), path.name),
+                         item=path.name, purpose="extract", repairs=1,
+                         repair_hint="Return the corrected JSON object only.")
+    except SchemaRepairFailed as exc:
+        raw: Any = {}
         try:
-            raw = parse_json_reply(reply)
+            raw = parse_json_reply(exc.reply)
         except ValueError:
             pass
+        raw = raw if isinstance(raw, dict) else {}
         fields = raw.get("fields") if isinstance(raw.get("fields"), dict) else {}
         lines = raw.get("lines") if isinstance(raw.get("lines"), list) else []
         return OtherDocument(document=path.name, fields=fields,
                              lines=[ln for ln in lines if isinstance(ln, dict)],
-                             issues=[f"schema_invalid after repair ({raw.get('doc_type', '?')}): {_short_error(exc)}"])
+                             issues=[f"schema_invalid after repair ({raw.get('doc_type', '?')}): {_short_error(exc.error)}"])
 
 
 def _short_error(exc: Exception, limit: int = 1500) -> str:

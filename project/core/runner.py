@@ -23,11 +23,12 @@ the runner's own events carry seq=1 as a placeholder.
 from __future__ import annotations
 
 import importlib
+import json
 import secrets
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional, Protocol
+from typing import Callable, Optional, Protocol, Sequence
 
 from .schemas import (FACTORY_TZ, ApprovalDecision, RunConfig, RunError, RunResult, TraceEvent,
                       TraceEventType)
@@ -102,6 +103,42 @@ def resume_run(run_id: str, decision: ApprovalDecision, emit: Emit,
     return _finish(emit, run_id, result)
 
 
+# --- recorded runs (CLI, benchmark): runs/<run_id>/ with trace, plans and meta --------
+
+def run_recorded(bundle_dir: Path, config: RunConfig, *, runs_root: Path = Path("runs"),
+                 run_id: Optional[str] = None, listeners: Sequence[Emit] = (),
+                 approve: bool = False) -> tuple[RunResult, Path]:
+    """start_run with a TraceWriter on runs/<run_id>/, then write plan_v<N>.json and meta.json.
+    `approve=True` approves the first plan (same as config.auto_approve, but traced as a CLI
+    decision). Returns (result, run folder)."""
+    from .tracing import TraceWriter, write_result
+    run_id = run_id or new_run_id()
+    run_dir = Path(runs_root) / run_id
+    writer = TraceWriter(run_dir, listeners=listeners)
+    bundle_dir = Path(bundle_dir)
+    result = start_run(run_id, bundle_dir, config, writer)
+    write_result(run_dir, result, config, bundle_id=bundle_dir.name)
+    if approve and result.status == "awaiting_approval":
+        result = resume_recorded(run_dir, ApprovalDecision(decision="approve", notes="approved from the CLI"),
+                                 config=config, listeners=listeners)
+    return result, run_dir
+
+
+def resume_recorded(run_dir: Path, decision: ApprovalDecision, *, config: Optional[RunConfig] = None,
+                    listeners: Sequence[Emit] = ()) -> RunResult:
+    """resume_run for a recorded run: appends to its trace and rewrites meta.json."""
+    from .tracing import TraceWriter, write_result
+    run_dir = Path(run_dir)
+    writer = TraceWriter(run_dir, listeners=listeners)
+    result = resume_run(run_dir.name, decision, writer, config=config)
+    write_result(run_dir, result, config)
+    path = run_dir / "approval.json"
+    decisions = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    decisions.append(decision.model_dump(mode="json"))
+    path.write_text(json.dumps(decisions, indent=2), encoding="utf-8")
+    return result
+
+
 # --- helpers -------------------------------------------------------------------
 
 def _load_backend(mode: str) -> Backend:
@@ -119,11 +156,23 @@ def _call(run_id: str, emit: Emit, fn: Callable[[Backend], RunResult]) -> RunRes
     except BudgetExceeded as exc:
         return _failed(run_id, "budget_exceeded", str(exc))
     except Exception as exc:  # noqa: BLE001 - every failure must become a RunResult
+        code = _error_code(exc)
         _event(emit, run_id, "error", f"{type(exc).__name__}: {exc}")
-        return _failed(run_id, "internal", f"{type(exc).__name__}: {exc}")
+        return _failed(run_id, code, f"{type(exc).__name__}: {exc}")
     if not isinstance(result, RunResult):
         return _failed(run_id, "internal", f"backend returned {type(result).__name__}, not RunResult")
     return result
+
+
+def _error_code(exc: Exception) -> str:
+    """schema_invalid: no valid answer after repair; model_error: refusal, turn limit or an API
+    error left after retries; internal: anything else (a bug)."""
+    from .harness import HarnessError, SchemaRepairFailed
+    if isinstance(exc, SchemaRepairFailed):
+        return "schema_invalid"
+    if isinstance(exc, HarnessError) or type(exc).__module__.split(".")[0] in ("anthropic", "httpx", "httpx2"):
+        return "model_error"
+    return "internal"
 
 
 def _failed(run_id: str, code: str, message: str) -> RunResult:

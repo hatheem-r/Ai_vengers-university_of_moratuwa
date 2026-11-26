@@ -1,167 +1,311 @@
-"""Trace writing and LLM cost (API.md §6). Owner: Shazan.
+"""Traces: the JSONL writer every run uses, the token price table, and trace summaries.
 
-Two jobs the rest of the code leaves to this module:
+Both systems send every event through one `emit(TraceEvent)` callback (core/runner.py).
+`TraceWriter` is that callback for a run folder (API.md §7):
 
-1. **Cost.** `cost_usd(model_id, usage)` prices one LLM call from its LangChain
-   `usage_metadata`; multi_agent/llm.py `call_llm` uses it for every `llm_call` event,
-   so both systems are priced the same way. Ajey's cost numbers come from these events.
-2. **Sequence numbers.** Agents and the runner emit events with `seq=1` as a placeholder.
-   `TraceWriter` is the `emit` callback that gives each event its real `seq` (1, 2, 3 ...
-   per run, thread-safe because Intake runs in parallel), writes `runs/<run_id>/trace.jsonl`,
-   and moves large payloads to `runs/<run_id>/payloads/<seq>.json` (`payload_ref`).
+    runs/<run_id>/
+      trace.jsonl      one TraceEvent per line (API.md §6)
+      payloads/        large payloads, referenced by `payload_ref`
+      plan_v<N>.json   one file per plan version          (write_result)
+      meta.json        config, status, timestamps, metrics (write_result)
 
-    writer = TraceWriter(Path("runs") / run_id, forward=print_event)
-    runner.start_run(run_id, bundle_dir, config, writer)
+    writer = TraceWriter(Path("runs") / run_id)
+    result = runner.start_run(run_id, bundle_dir, config, writer)
+
+What the writer does to each event, so backends don't have to:
+- renumbers `seq` 1, 2, 3 ... per run (backends send seq=1 as a placeholder);
+- fills `cost_usd` on `llm_call` events from the token counts and PRICES;
+- moves a payload bigger than `max_inline_bytes` to payloads/<seq>.json and sets `payload_ref`;
+- appends and flushes one line, under a lock (Intake calls run in parallel);
+- forwards the final event to any listeners (the API's progress view, a console printer).
+
+Costs come only from here (Ajey's benchmark reads `cost_usd` straight from traces).
 """
 from __future__ import annotations
 
 import json
 import threading
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Optional
+from typing import Any, Callable, Iterable, Optional, Union
 
-from .schemas import TraceEvent
+from .schemas import FACTORY_TZ, RunConfig, RunResult, TraceEvent
 
-# ---------------------------------------------------------------------------
-# Prices: USD per million tokens, Anthropic first-party list prices (Nov 2026).
-# Cache writes cost 1.25x the input price (5-minute TTL) or 2x (1-hour TTL).
-# Re-check before the final benchmark and state the date in the results.
-# ---------------------------------------------------------------------------
+Emit = Callable[[TraceEvent], None]
 
+
+# --- prices ----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Price:
+    """US dollars per million tokens (Anthropic first-party list prices)."""
     input: float
     output: float
     cache_read: float
-    # A higher tier above this many prompt tokens (Claude Haiku 5.5).
-    tier_threshold: Optional[int] = None
-    input_above: Optional[float] = None
-    output_above: Optional[float] = None
+    cache_write_5m: float
+    cache_write_1h: float
+    # Haiku 5.5 charges more once a prompt is over 100K tokens.
+    long_threshold: Optional[int] = None
+    long_input: Optional[float] = None
+    long_output: Optional[float] = None
 
 
+def _price(inp: float, out: float, cache_read: Optional[float] = None, **kw: Any) -> Price:
+    return Price(input=inp, output=out, cache_read=cache_read if cache_read is not None else inp * 0.1,
+                 cache_write_5m=inp * 1.25, cache_write_1h=inp * 2.0, **kw)
+
+
+# Checked 22 Nov 2026. Cache writes are 1.25x input (5-minute TTL) and 2x input (1-hour TTL).
 PRICES: dict[str, Price] = {
-    "claude-sonnet-5-5": Price(input=2.00, output=10.00, cache_read=0.10),
-    # $0.10 / $0.50 up to 100K prompt tokens, $0.50 / $2.50 above. Cache-read price is
-    # assumed at the usual 0.1x of input: confirm on the pricing page before the benchmark.
-    "claude-haiku-5-5": Price(input=0.10, output=0.50, cache_read=0.01,
-                              tier_threshold=100_000, input_above=0.50, output_above=2.50),
-    "claude-opus-5-5": Price(input=4.00, output=20.00, cache_read=0.20),
+    "claude-haiku-5-5": _price(0.10, 0.50, long_threshold=100_000, long_input=0.50, long_output=2.50),
+    "claude-sonnet-5-5": _price(2.00, 10.00, cache_read=0.10),
+    "claude-opus-5-5": _price(4.00, 20.00, cache_read=0.20),
+    "claude-sonnet-5": _price(2.00, 10.00),
+    "claude-haiku-4-5": _price(1.00, 5.00),
 }
 
 
 def register_price(model_id: str, price: Price) -> None:
-    """Add or replace a model's price (e.g. Ajey's non-Claude Intake candidates)."""
+    """Add a price for a model under evaluation (Ajey's Intake candidates)."""
     PRICES[model_id] = price
 
 
-def usage_breakdown(usage: Optional[Mapping[str, Any]]) -> dict[str, int]:
-    """Token counts from LangChain `usage_metadata`. `input_tokens` there is the whole prompt,
-    including cache reads and writes (langchain-anthropic adds them back in)."""
-    usage = usage or {}
-    details = usage.get("input_token_details") or {}
-    write_5m = int(details.get("ephemeral_5m_input_tokens") or 0)
-    write_1h = int(details.get("ephemeral_1h_input_tokens") or 0)
-    if not (write_5m or write_1h):
-        write_5m = int(details.get("cache_creation") or 0)  # TTL not split: default TTL is 5 minutes
-    return {"input": int(usage.get("input_tokens") or 0), "output": int(usage.get("output_tokens") or 0),
-            "cache_read": int(details.get("cache_read") or 0), "cache_write_5m": write_5m,
-            "cache_write_1h": write_1h}
+def cost_usd(model_id: Optional[str], input_tokens: int, output_tokens: int, *,
+             cached_input_tokens: int = 0, cache_write_5m_tokens: int = 0,
+             cache_write_1h_tokens: int = 0) -> Optional[float]:
+    """Dollar cost of one call, or None for a model without a price (fake models, unknown IDs).
 
-
-def cost_usd(model_id: Optional[str], usage: Optional[Mapping[str, Any]]) -> Optional[float]:
-    """Cost of one LLM call, or None for a model with no price (never a silent 0)."""
+    `input_tokens` is the *total* prompt size, cached parts included (that is what LangChain's
+    usage_metadata reports for Anthropic models); the cached and cache-write parts are priced
+    separately and the rest at the normal input rate."""
     price = PRICES.get(model_id or "")
     if price is None:
         return None
-    u = usage_breakdown(usage)
-    in_price, out_price, scale = price.input, price.output, 1.0
-    if price.tier_threshold is not None and u["input"] > price.tier_threshold:
-        in_price = price.input_above or price.input
-        out_price = price.output_above or price.output
-        scale = in_price / price.input
-    uncached = max(u["input"] - u["cache_read"] - u["cache_write_5m"] - u["cache_write_1h"], 0)
-    total = (uncached * in_price
-             + u["cache_read"] * price.cache_read * scale
-             + u["cache_write_5m"] * price.input * 1.25 * scale
-             + u["cache_write_1h"] * price.input * 2.0 * scale
-             + u["output"] * out_price)
-    return round(total / 1_000_000, 6)
+    inp, out = price.input, price.output
+    if price.long_threshold is not None and input_tokens > price.long_threshold:
+        inp, out = price.long_input or inp, price.long_output or out
+        scale = inp / price.input
+    else:
+        scale = 1.0
+    plain = max(0, input_tokens - cached_input_tokens - cache_write_5m_tokens - cache_write_1h_tokens)
+    dollars = (plain * inp + output_tokens * out
+               + cached_input_tokens * price.cache_read * scale
+               + cache_write_5m_tokens * price.cache_write_5m * scale
+               + cache_write_1h_tokens * price.cache_write_1h * scale) / 1_000_000
+    return round(dollars, 6)
 
 
-# ---------------------------------------------------------------------------
-# The emit callback
-# ---------------------------------------------------------------------------
+def event_cost(event: TraceEvent) -> Optional[float]:
+    """Cost of an `llm_call` event from its token fields (cache writes are read from the payload)."""
+    if event.type != "llm_call" or event.input_tokens is None:
+        return None
+    p = event.payload or {}
+    return cost_usd(event.model, event.input_tokens, event.output_tokens or 0,
+                    cached_input_tokens=event.cached_input_tokens or 0,
+                    cache_write_5m_tokens=int(p.get("cache_write_5m_tokens") or 0),
+                    cache_write_1h_tokens=int(p.get("cache_write_1h_tokens") or 0))
 
-MAX_INLINE_PAYLOAD_BYTES = 2_000
 
+# --- the writer ------------------------------------------------------------------------
 
 class TraceWriter:
-    """An `emit` callback: numbers events, writes trace.jsonl, offloads large payloads.
+    """The `emit` callback for one run: writes runs/<run_id>/trace.jsonl (see module doc).
 
-    `run_dir=None` keeps events in memory only (`.events`). `forward` also receives every
-    numbered event (for printing or the API's live progress). An exception in `forward`
-    is swallowed: a display problem must never fail a run.
-    """
+    Re-opening a folder (resume after a restart) continues the seq numbers already in the file."""
 
-    def __init__(self, run_dir: Optional[Path] = None,
-                 forward: Optional[Callable[[TraceEvent], None]] = None, start_seq: int = 0):
-        self.run_dir = Path(run_dir) if run_dir is not None else None
-        self.forward = forward
-        self.events: list[TraceEvent] = []
-        self._seq = start_seq
+    def __init__(self, run_dir: Union[str, Path], *, listeners: Iterable[Emit] = (),
+                 max_inline_bytes: int = 4096) -> None:
+        self.run_dir = Path(run_dir)
+        self.run_dir.mkdir(parents=True, exist_ok=True)
+        self.path = self.run_dir / "trace.jsonl"
+        self.max_inline_bytes = max_inline_bytes
+        self.listeners: list[Emit] = list(listeners)
         self._lock = threading.Lock()
-        if self.run_dir is not None:
-            self.run_dir.mkdir(parents=True, exist_ok=True)
-
-    @property
-    def path(self) -> Optional[Path]:
-        return self.run_dir / "trace.jsonl" if self.run_dir is not None else None
+        self._seq = _last_seq(self.path)
 
     def __call__(self, event: TraceEvent) -> None:
         with self._lock:
             self._seq += 1
-            update: dict[str, Any] = {"seq": self._seq}
-            if event.payload is not None and self.run_dir is not None:
-                blob = json.dumps(event.payload, default=str)
-                if len(blob.encode("utf-8")) > MAX_INLINE_PAYLOAD_BYTES:
-                    ref = f"payloads/{self._seq}.json"
-                    (self.run_dir / "payloads").mkdir(exist_ok=True)
-                    (self.run_dir / ref).write_text(blob, encoding="utf-8")
-                    update.update(payload=None, payload_ref=ref)
-            event = event.model_copy(update=update)
+            event = prepare_event(event, self._seq, self.run_dir, self.max_inline_bytes)
+            with self.path.open("a", encoding="utf-8") as f:
+                f.write(event.model_dump_json() + "\n")
+        for listener in self.listeners:
+            listener(event)
+
+    @property
+    def last_seq(self) -> int:
+        return self._seq
+
+
+class MemoryTrace:
+    """An `emit` callback that keeps events in a list (tests, the benchmark's dry runs).
+    Applies the same seq numbering and cost filling as TraceWriter."""
+
+    def __init__(self, *, listeners: Iterable[Emit] = ()) -> None:
+        self.events: list[TraceEvent] = []
+        self.listeners = list(listeners)
+        self._lock = threading.Lock()
+
+    def __call__(self, event: TraceEvent) -> None:
+        with self._lock:
+            event = prepare_event(event, len(self.events) + 1, None, None)
             self.events.append(event)
-            if self.path is not None:
-                with self.path.open("a", encoding="utf-8") as f:
-                    f.write(event.model_dump_json() + "\n")
-        if self.forward is not None:
-            try:
-                self.forward(event)
-            except Exception:  # noqa: BLE001 - display must not break the run
-                pass
+        for listener in self.listeners:
+            listener(event)
 
 
-def read_trace(path: Path) -> list[TraceEvent]:
-    with Path(path).open(encoding="utf-8") as f:
-        return [TraceEvent.model_validate_json(line) for line in f if line.strip()]
+def prepare_event(event: TraceEvent, seq: int, run_dir: Optional[Path],
+                  max_inline_bytes: Optional[int]) -> TraceEvent:
+    """Renumber, fill cost, spill a large payload. Returns a new event."""
+    update: dict[str, Any] = {"seq": seq}
+    if event.type == "llm_call" and event.cost_usd is None:
+        update["cost_usd"] = event_cost(event)
+    if run_dir is not None and max_inline_bytes is not None and event.payload is not None:
+        blob = json.dumps(event.payload, default=str, separators=(",", ":"))
+        if len(blob.encode()) > max_inline_bytes:
+            ref = f"payloads/{seq}.json"
+            (run_dir / "payloads").mkdir(exist_ok=True)
+            (run_dir / ref).write_text(blob, encoding="utf-8")
+            update.update(payload=None, payload_ref=ref)
+    return event.model_copy(update=update)
+
+
+def _last_seq(path: Path) -> int:
+    if not path.exists():
+        return 0
+    last = 0
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    last = max(last, int(json.loads(line).get("seq", 0)))
+                except (ValueError, AttributeError):
+                    continue
+    return last
+
+
+def console_printer(e: TraceEvent) -> None:
+    """A listener that prints one line per event (CLI)."""
+    extra = ""
+    if e.type == "llm_call":
+        cost = f", ${e.cost_usd:.4f}" if e.cost_usd is not None else ""
+        extra = f"  [{e.input_tokens} in / {e.output_tokens} out, {e.latency_ms} ms{cost}]"
+    print(f"{e.seq:>4} {e.ts:%H:%M:%S} {e.type:<15} {e.agent or '':<8} {e.item or ''} {e.summary}{extra}",
+          flush=True)
+
+
+# --- reading and summarising -----------------------------------------------------------
+
+def read_trace(path: Union[str, Path], *, after_seq: int = 0) -> list[TraceEvent]:
+    """Events from a trace.jsonl (or a run folder), optionally only those after `after_seq`."""
+    path = Path(path)
+    if path.is_dir():
+        path = path / "trace.jsonl"
+    events = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                ev = TraceEvent.model_validate_json(line)
+                if ev.seq > after_seq:
+                    events.append(ev)
+    return events
+
+
+def load_payload(run_dir: Union[str, Path], event: TraceEvent) -> Optional[dict]:
+    """An event's payload, whether inline or spilled to payloads/<seq>.json."""
+    if event.payload is not None:
+        return event.payload
+    if event.payload_ref:
+        return json.loads((Path(run_dir) / event.payload_ref).read_text(encoding="utf-8"))
+    return None
 
 
 def summarize(events: Iterable[TraceEvent]) -> dict[str, Any]:
-    """Run totals in the shape of API.md §4.4 `metrics` (except elapsed_s)."""
-    m: dict[str, Any] = {"llm_calls": 0, "tool_calls": 0, "input_tokens": 0, "cached_input_tokens": 0,
-                         "output_tokens": 0, "cost_usd": 0.0, "unpriced_llm_calls": 0}
+    """Run metrics from a trace: what meta.json and the benchmark report use.
+
+    `wall_seconds` is first to last event; `active_seconds` leaves out time spent waiting
+    for the human (interrupt -> human_decision)."""
+    events = sorted(events, key=lambda e: e.seq)
+    llm = [e for e in events if e.type == "llm_call"]
+    tools = [e for e in events if e.type == "tool_call"]
+    by_agent: dict[str, dict[str, Any]] = {}
+    for e in llm:
+        a = by_agent.setdefault(e.agent or "?", {"llm_calls": 0, "input_tokens": 0, "output_tokens": 0,
+                                                 "cost_usd": 0.0})
+        a["llm_calls"] += 1
+        a["input_tokens"] += e.input_tokens or 0
+        a["output_tokens"] += e.output_tokens or 0
+        a["cost_usd"] = round(a["cost_usd"] + (e.cost_usd or 0.0), 6)
+    tool_counts: dict[str, int] = {}
+    for e in tools:
+        tool_counts[e.tool or "?"] = tool_counts.get(e.tool or "?", 0) + 1
+
+    wall = (events[-1].ts - events[0].ts).total_seconds() if events else 0.0
+    waiting, paused_at = 0.0, None
     for e in events:
-        if e.type == "llm_call":
-            m["llm_calls"] += 1
-            m["input_tokens"] += e.input_tokens or 0
-            m["cached_input_tokens"] += e.cached_input_tokens or 0
-            m["output_tokens"] += e.output_tokens or 0
-            if e.cost_usd is None:
-                m["unpriced_llm_calls"] += 1
-            else:
-                m["cost_usd"] += e.cost_usd
-        elif e.type == "tool_call":
-            m["tool_calls"] += 1
-    m["cost_usd"] = round(m["cost_usd"], 6)
-    return m
+        if e.type == "interrupt":
+            paused_at = e.ts
+        elif e.type == "human_decision" and paused_at is not None:
+            waiting += (e.ts - paused_at).total_seconds()
+            paused_at = None
+    costs = [e.cost_usd for e in llm]
+    in_tok = sum(e.input_tokens or 0 for e in llm)
+    out_tok = sum(e.output_tokens or 0 for e in llm)
+    end = next((e for e in reversed(events) if e.type == "run_end"), None)
+    return {
+        "events": len(events),
+        "llm_calls": len(llm),
+        "tool_calls": len(tools),
+        "tool_calls_by_tool": tool_counts,
+        "input_tokens": in_tok,
+        "cached_input_tokens": sum(e.cached_input_tokens or 0 for e in llm),
+        "output_tokens": out_tok,
+        "tokens": in_tok + out_tok,
+        "cost_usd": round(sum(c for c in costs if c is not None), 6),
+        "cost_complete": all(c is not None for c in costs),
+        "llm_latency_ms": sum(e.latency_ms or 0 for e in llm),
+        "wall_seconds": round(wall, 3),
+        "active_seconds": round(max(0.0, wall - waiting), 3),
+        "handoffs": sum(e.type == "handoff" for e in events),
+        "revisions": sum(e.type == "handoff" and e.from_agent == "checker" and e.to_agent == "planner"
+                         for e in events),
+        "errors": sum(e.type == "error" for e in events),
+        "by_agent": by_agent,
+        "status": (end.payload or {}).get("status") if end else None,
+    }
+
+
+# --- run folder ------------------------------------------------------------------------
+
+def write_result(run_dir: Union[str, Path], result: RunResult, config: Optional[RunConfig] = None,
+                 *, bundle_id: Optional[str] = None, extra: Optional[dict] = None) -> dict:
+    """Write plan_v<N>.json (if there is a plan) and meta.json with metrics from the trace.
+    Safe to call after every start/resume; meta.json is rewritten each time."""
+    run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    if result.plan is not None:
+        (run_dir / f"plan_v{result.plan_version}.json").write_text(result.plan.model_dump_json(indent=2),
+                                                                   encoding="utf-8")
+    meta_path = run_dir / "meta.json"
+    meta: dict[str, Any] = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    events = read_trace(run_dir) if (run_dir / "trace.jsonl").exists() else []
+    meta.update({
+        "run_id": result.run_id,
+        "status": result.status,
+        "plan_version": result.plan_version,
+        "error": result.error.model_dump() if result.error else None,
+        "updated_at": datetime.now(FACTORY_TZ).isoformat(),
+        "metrics": summarize(events),
+    })
+    if config is not None:
+        meta["config"] = config.model_dump(mode="json")
+        meta["system_id"] = config.system_id
+    if bundle_id is not None:
+        meta["bundle_id"] = bundle_id
+    if events and "started_at" not in meta:
+        meta["started_at"] = events[0].ts.isoformat()
+    meta.update(extra or {})
+    meta_path.write_text(json.dumps(meta, indent=2, default=str), encoding="utf-8")
+    return meta

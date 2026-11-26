@@ -25,7 +25,7 @@ Production planners in small and mid-sized factories build work orders by hand f
 - Independent Checker agent with one revision loop
 - Human-in-the-loop approval before release
 - Per-run traces of every agent call, with tokens, cost and latency
-- Streamlit interface (planned)
+- React + Vite + TypeScript industrial control UI + FastAPI backend (with `MOCK=1` mode)
 
 ## Architecture
 
@@ -43,7 +43,8 @@ See [Workflow.md](Workflow.md). In short: Intake Agent (parallel) → Planner Ag
 | Data handling | pandas, openpyxl, pdfplumber |
 | Validation | Pydantic |
 | Configuration | python-dotenv |
-| UI | Streamlit |
+| API layer | FastAPI, Uvicorn (`project/api/`) |
+| UI | React 18, TypeScript, Vite, Tailwind CSS, Radix UI, TanStack Query, Recharts (`frontend/`) |
 
 ## Benchmark plan
 
